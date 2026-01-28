@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { LayoutDashboard, FileText, GitBranch, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequestForm from './RequestForm';
+import ROProcess from './ROProcess';
 
 type SubTab = 'dashboard' | 'request' | 'process';
 
@@ -23,17 +24,7 @@ export default function ROPage() {
       case 'request':
         return <RequestForm />;
       case 'process':
-        return (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-[#0D3B2E]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <GitBranch className="w-10 h-10 text-[#0D3B2E]" />
-              </div>
-              <h2 className="text-xl font-bold text-[#0D3B2E] mb-2">RO Process</h2>
-              <p className="text-gray-500 text-sm">Track Order Status & Workflow</p>
-            </div>
-          </div>
-        );
+        return <ROProcess />;
       default:
         return null;
     }
