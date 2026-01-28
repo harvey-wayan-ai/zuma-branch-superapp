@@ -79,7 +79,7 @@ export default function ROPage() {
       </div>
 
       {/* Sub-Tab Content */}
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {renderSubContent()}
       </div>
     </div>
