@@ -54,9 +54,11 @@ export default function MainLayout() {
       <header className="bg-white border-b border-gray-100 px-4 py-3">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#0D3B2E] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">Z</span>
-            </div>
+            <img 
+              src="/zuma-logo.png" 
+              alt="Zuma Logo" 
+              className="w-8 h-8 object-contain"
+            />
             <span className="font-semibold text-gray-900">Zuma Super App</span>
           </div>
         </div>
