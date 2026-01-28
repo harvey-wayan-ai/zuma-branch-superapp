@@ -31,8 +31,28 @@ export default function ROProcess() {
 
   const saveToSheet = async () => {
     setIsSaving(true);
-    // TODO: Call API to update Google Sheets
-    setTimeout(() => setIsSaving(false), 1500);
+    try {
+      const response = await fetch('/api/update-ro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roId: selectedRO?.id,
+          articles: articles
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`✅ Saved! Updated ${data.updates} articles in Google Sheets`);
+      } else {
+        alert(`❌ Error: ${data.error}`);
+      }
+    } catch (error: any) {
+      alert(`❌ Failed to save: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!selectedRO) {
