@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Home, Search, ShoppingCart, User, Plus } from 'lucide-react';
+import { Home, Search, ShoppingCart, Settings, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type TabId = 'home' | 'sku' | 'action' | 'ro' | 'profile';
@@ -17,7 +17,7 @@ export default function BottomNavigation({ activeTab, onTabChange }: BottomNavPr
     { id: 'sku' as TabId, label: 'SKU', icon: Search },
     { id: 'action' as TabId, label: '', icon: Plus, isCenter: true },
     { id: 'ro' as TabId, label: 'RO', icon: ShoppingCart },
-    { id: 'profile' as TabId, label: 'Profile', icon: User },
+    { id: 'profile' as TabId, label: 'Settings', icon: Settings },
   ];
 
   return (
