@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Clock, 
   CheckCircle2, 
@@ -8,8 +8,8 @@ import {
   Truck, 
   Home,
   ChevronRight,
-  Search,
-  Filter
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,17 +20,11 @@ interface ROItem {
   currentStatus: ROStatus;
   totalBoxes: number;
   totalArticles: number;
+  dddBoxes: number;
+  ljbbBoxes: number;
 }
 
-type ROStatus = 
-  | 'QUEUE' 
-  | 'APPROVED' 
-  | 'PICKING' 
-  | 'PICK_VERIFIED' 
-  | 'READY_TO_SHIP' 
-  | 'IN_DELIVERY' 
-  | 'ARRIVED' 
-  | 'COMPLETED';
+type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'COMPLETED' | 'DELIVERY' | 'DNPB PROCESS';
 
 const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'QUEUE', label: 'Queue', icon: Clock, description: 'Awaiting approval' },
@@ -43,65 +37,76 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
   { id: 'COMPLETED', label: 'Completed', icon: CheckCircle2, description: 'Order closed' },
 ];
 
+// Real data from Google Sheets
+const realROData: ROItem[] = [
+  { 
+    id: 'RO-2511-0007', 
+    store: 'Zuma Matos', 
+    createdAt: '26/11/2025', 
+    currentStatus: 'DELIVERY',
+    totalBoxes: 16,
+    totalArticles: 11,
+    dddBoxes: 12,
+    ljbbBoxes: 4
+  },
+  { 
+    id: 'RO-2512-0008', 
+    store: 'Zuma Sunrise Mall', 
+    createdAt: '02/12/2025', 
+    currentStatus: 'DELIVERY',
+    totalBoxes: 9,
+    totalArticles: 8,
+    dddBoxes: 4,
+    ljbbBoxes: 5
+  },
+  { 
+    id: 'RO-2512-0009', 
+    store: 'Zuma Royal Plaza', 
+    createdAt: '02/12/2025', 
+    currentStatus: 'DNPB PROCESS',
+    totalBoxes: 11,
+    totalArticles: 8,
+    dddBoxes: 11,
+    ljbbBoxes: 0
+  },
+  { 
+    id: 'RO-2512-0010', 
+    store: 'Zuma Royal Plaza', 
+    createdAt: '02/12/2025', 
+    currentStatus: 'COMPLETED',
+    totalBoxes: 32,
+    totalArticles: 1,
+    dddBoxes: 32,
+    ljbbBoxes: 0
+  },
+  { 
+    id: 'RO-2512-0011', 
+    store: 'Zuma Sunrise Mall', 
+    createdAt: '02/12/2025', 
+    currentStatus: 'DNPB PROCESS',
+    totalBoxes: 85,
+    totalArticles: 1,
+    dddBoxes: 0,
+    ljbbBoxes: 85
+  },
+];
+
 export default function ROProcess() {
   const [selectedRO, setSelectedRO] = useState<ROItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<ROStatus | 'ALL'>('ALL');
-
-  // Dummy RO data
-  const roList: ROItem[] = [
-    { 
-      id: 'RO-2601-0001', 
-      store: 'Zuma Tunjungan', 
-      createdAt: '2026-01-28', 
-      currentStatus: 'COMPLETED',
-      totalBoxes: 15,
-      totalArticles: 12
-    },
-    { 
-      id: 'RO-2601-0002', 
-      store: 'Zuma Royal Plaza', 
-      createdAt: '2026-01-27', 
-      currentStatus: 'IN_DELIVERY',
-      totalBoxes: 20,
-      totalArticles: 18
-    },
-    { 
-      id: 'RO-2601-0003', 
-      store: 'Zuma Galaxy Mall', 
-      createdAt: '2026-01-26', 
-      currentStatus: 'PICKING',
-      totalBoxes: 10,
-      totalArticles: 8
-    },
-    { 
-      id: 'RO-2601-0004', 
-      store: 'Zuma Tunjungan', 
-      createdAt: '2026-01-28', 
-      currentStatus: 'QUEUE',
-      totalBoxes: 25,
-      totalArticles: 20
-    },
-    { 
-      id: 'RO-2601-0005', 
-      store: 'Zuma Bintaro', 
-      createdAt: '2026-01-25', 
-      currentStatus: 'APPROVED',
-      totalBoxes: 12,
-      totalArticles: 10
-    },
-  ];
+  const [isLoading, setIsLoading] = useState(false);
 
   const filteredROList = filterStatus === 'ALL' 
-    ? roList 
-    : roList.filter(ro => ro.currentStatus === filterStatus);
+    ? realROData 
+    : realROData.filter(ro => ro.currentStatus === filterStatus);
 
   const getStatusColor = (status: ROStatus) => {
     switch (status) {
       case 'COMPLETED':
         return 'bg-green-100 text-green-700';
-      case 'ARRIVED':
+      case 'DELIVERY':
         return 'bg-blue-100 text-blue-700';
-      case 'IN_DELIVERY':
+      case 'DNPB PROCESS':
         return 'bg-yellow-100 text-yellow-700';
       case 'QUEUE':
         return 'bg-gray-100 text-gray-600';
@@ -110,8 +115,27 @@ export default function ROProcess() {
     }
   };
 
+  const refreshData = () => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 1000);
+  };
+
   const renderROList = () => (
     <div className="space-y-3">
+      {/* Header with refresh */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Database className="w-4 h-4 text-[#0D3B2E]" />
+          <span className="text-sm font-medium text-gray-700">Live Data</span>
+        </div>
+        <button 
+          onClick={refreshData}
+          className={cn("p-2 hover:bg-gray-100 rounded-lg transition-colors", isLoading && "animate-spin")}
+        >
+          <RefreshCw className="w-4 h-4 text-gray-400" />
+        </button>
+      </div>
+
       {/* Filter */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         <button
@@ -125,7 +149,7 @@ export default function ROProcess() {
         >
           All
         </button>
-        {['QUEUE', 'APPROVED', 'PICKING', 'IN_DELIVERY', 'COMPLETED'].map((status) => (
+        {['DELIVERY', 'DNPB PROCESS', 'COMPLETED'].map((status) => (
           <button
             key={status}
             onClick={() => setFilterStatus(status as ROStatus)}
@@ -136,7 +160,7 @@ export default function ROProcess() {
                 : "bg-gray-100 text-gray-600"
             )}
           >
-            {status.replace('_', ' ')}
+            {status}
           </button>
         ))}
       </div>
@@ -155,7 +179,7 @@ export default function ROProcess() {
                 <p className="font-semibold text-gray-900">{ro.store}</p>
               </div>
               <span className={cn("px-2 py-1 rounded-full text-xs font-medium", getStatusColor(ro.currentStatus))}>
-                {ro.currentStatus.replace('_', ' ')}
+                {ro.currentStatus}
               </span>
             </div>
             
@@ -165,6 +189,15 @@ export default function ROProcess() {
               <span>{ro.totalBoxes} boxes</span>
               <span>•</span>
               <span>{ro.createdAt}</span>
+            </div>
+            
+            <div className="mt-2 flex gap-2 text-xs">
+              {ro.dddBoxes > 0 && (
+                <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">DDD: {ro.dddBoxes}</span>
+              )}
+              {ro.ljbbBoxes > 0 && (
+                <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded">LJBB: {ro.ljbbBoxes}</span>
+              )}
             </div>
           </button>
         ))}
@@ -197,6 +230,14 @@ export default function ROProcess() {
             <span>•</span>
             <span>{selectedRO.totalBoxes} boxes</span>
           </div>
+          <div className="mt-2 flex gap-2">
+            {selectedRO.dddBoxes > 0 && (
+              <span className="px-2 py-1 bg-white/20 rounded text-xs">DDD: {selectedRO.dddBoxes} boxes</span>
+            )}
+            {selectedRO.ljbbBoxes > 0 && (
+              <span className="px-2 py-1 bg-white/20 rounded text-xs">LJBB: {selectedRO.ljbbBoxes} boxes</span>
+            )}
+          </div>
         </div>
 
         {/* Process Timeline */}
@@ -211,7 +252,6 @@ export default function ROProcess() {
               
               return (
                 <div key={status.id} className="flex gap-4">
-                  {/* Timeline Line */}
                   <div className="flex flex-col items-center">
                     <div 
                       className={cn(
@@ -235,7 +275,6 @@ export default function ROProcess() {
                     )}
                   </div>
                   
-                  {/* Status Info */}
                   <div className={cn("pb-6", index === statusFlow.length - 1 && "pb-0")}>
                     <p 
                       className={cn(
