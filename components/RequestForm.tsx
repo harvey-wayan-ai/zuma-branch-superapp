@@ -36,6 +36,13 @@ export default function RequestForm() {
     'Zuma Ciputra World',
   ];
 
+  // Special options for warehouse supervisor access
+  const specialStores = [
+    'Other Need',
+    'Wholesale',
+    'Consignment',
+  ];
+
   // Available articles database
   const availableArticles: AvailableArticle[] = [
     { code: 'M1AMV102', name: 'MEN AIRMOVE 2, INDIGO TAN', series: 'AIRMOVE', gender: 'MEN' },
@@ -172,9 +179,16 @@ export default function RequestForm() {
           className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
         >
           <option value="">Select Store</option>
-          {stores.map((store) => (
-            <option key={store} value={store}>{store}</option>
-          ))}
+          <optgroup label="Regular Stores">
+            {stores.map((store) => (
+              <option key={store} value={store}>{store}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Special Options">
+            {specialStores.map((store) => (
+              <option key={store} value={store}>{store}</option>
+            ))}
+          </optgroup>
         </select>
       </div>
 
@@ -185,22 +199,48 @@ export default function RequestForm() {
             <h3 className="font-semibold text-gray-900">Articles</h3>
             <p className="text-xs text-gray-500">Minimum 1 box per article (12 pairs)</p>
           </div>
-          <Button
-            onClick={() => {
-              if (!selectedStore) {
-                alert('Please select a destination store first!');
-                return;
-              }
-              setTempArticles([...articles]);
-              setShowArticleSelector(true);
-            }}
-            className="bg-[#00D084] hover:bg-[#00B874] text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            size="sm"
-            disabled={!selectedStore}
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            Add
-          </Button>
+          <div className="flex gap-2">
+            {/* Auto Generate Button - Only for regular stores */}
+            <Button
+              onClick={() => {
+                if (!selectedStore) {
+                  alert('Please select a destination store first!');
+                  return;
+                }
+                if (specialStores.includes(selectedStore)) {
+                  alert('Auto-generate is only available for regular stores, not for Wholesale/Consignment/Other Need.');
+                  return;
+                }
+                // TODO: Fetch auto-generated recommendations from Supabase
+                alert(`Auto-generate recommendations for ${selectedStore}\n\nThis will fetch recommendations from ro_recommendations table.`);
+              }}
+              className="bg-gradient-to-r from-[#0D3B2E] to-[#1a5a48] hover:from-[#1a5a48] hover:to-[#0D3B2E] text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+              size="sm"
+              disabled={!selectedStore || specialStores.includes(selectedStore)}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Auto Generate
+            </Button>
+            
+            <Button
+              onClick={() => {
+                if (!selectedStore) {
+                  alert('Please select a destination store first!');
+                  return;
+                }
+                setTempArticles([...articles]);
+                setShowArticleSelector(true);
+              }}
+              className="bg-[#00D084] hover:bg-[#00B874] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              size="sm"
+              disabled={!selectedStore}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Add
+            </Button>
+          </div>
         </div>
 
         {articles.length === 0 ? (
