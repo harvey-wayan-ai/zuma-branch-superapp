@@ -99,7 +99,17 @@ export default function RequestForm() {
   const totalBoxes = articles.reduce((sum, item) => sum + item.boxes, 0);
   const totalPairs = totalBoxes * 12;
 
-  const handleSubmit = () => {
+  // Generate RO ID locally (format: RO-YYMM-XXXX)
+  const generateROId = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2); // Last 2 digits of year
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 2-digit month
+    const random = Math.floor(1000 + Math.random() * 9000); // Random 4-digit number
+    return `RO-${year}${month}-${random}`;
+  };
+
+  const handleSubmit = async () => {
+    const roId = generateROId();
     const now = new Date();
     const formattedDate = now.toLocaleDateString('id-ID', {
       day: '2-digit',
@@ -111,7 +121,31 @@ export default function RequestForm() {
       minute: '2-digit'
     });
     
-    alert(`RO Submitted!\nStore: ${selectedStore}\nArticles: ${articles.length}\nTotal Boxes: ${totalBoxes}\nTotal Pairs: ${totalPairs}\nSubmitted: ${formattedDate} at ${formattedTime}`);
+    // Prepare data for Supabase
+    const roData = {
+      ro_id: roId,
+      store_name: selectedStore,
+      articles: articles.map(article => ({
+        article_code: article.code,
+        article_name: article.name,
+        boxes_requested: article.boxes,
+        pairs_requested: article.boxes * 12
+      })),
+      total_boxes: totalBoxes,
+      total_pairs: totalPairs,
+      status: 'QUEUE',
+      notes: notes,
+      created_at: now.toISOString()
+    };
+    
+    // TODO: Insert to Supabase ro_process table
+    // For now, just show success message
+    alert(`RO Submitted Successfully!\n\nRO ID: ${roId}\nStore: ${selectedStore}\nArticles: ${articles.length}\nTotal Boxes: ${totalBoxes}\nTotal Pairs: ${totalPairs}\nStatus: QUEUE\nSubmitted: ${formattedDate} at ${formattedTime}\n\nNote: Data will be saved to Supabase ro_process table.`);
+    
+    // Reset form after submission
+    setSelectedStore('');
+    setArticles([]);
+    setNotes('');
   };
 
   return (
@@ -123,6 +157,7 @@ export default function RequestForm() {
           <span className="font-semibold">New Replenishment Order</span>
         </div>
         <p className="text-sm opacity-80">Weekly stock request for your stores</p>
+        <p className="text-xs opacity-60 mt-1">RO ID will be auto-generated on submit (Format: RO-YYMM-XXXX)</p>
       </div>
 
       {/* Store Selection */}
