@@ -21,6 +21,7 @@ interface AvailableArticle {
 export default function RequestForm() {
   const [selectedStore, setSelectedStore] = useState('');
   const [articles, setArticles] = useState<ArticleItem[]>([]);
+  const [tempArticles, setTempArticles] = useState<ArticleItem[]>([]);
   const [notes, setNotes] = useState('');
   const [showArticleSelector, setShowArticleSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,9 +151,17 @@ export default function RequestForm() {
             <p className="text-xs text-gray-500">Minimum 1 box per article (12 pairs)</p>
           </div>
           <Button
-            onClick={() => setShowArticleSelector(true)}
-            className="bg-[#00D084] hover:bg-[#00B874] text-white"
+            onClick={() => {
+              if (!selectedStore) {
+                alert('Please select a destination store first!');
+                return;
+              }
+              setTempArticles([...articles]);
+              setShowArticleSelector(true);
+            }}
+            className="bg-[#00D084] hover:bg-[#00B874] text-white disabled:opacity-50 disabled:cursor-not-allowed"
             size="sm"
+            disabled={!selectedStore}
           >
             <Plus className="w-4 h-4 mr-1" />
             Add
@@ -266,6 +275,7 @@ export default function RequestForm() {
               </div>
               <button
                 onClick={() => {
+                  setArticles(tempArticles);
                   setShowArticleSelector(false);
                   setSearchQuery('');
                   setSelectedGender('ALL');
@@ -354,6 +364,7 @@ export default function RequestForm() {
                 </div>
                 <button
                   onClick={() => {
+                    setTempArticles([]);
                     setShowArticleSelector(false);
                     setSearchQuery('');
                     setSelectedGender('ALL');
