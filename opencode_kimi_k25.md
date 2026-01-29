@@ -92,12 +92,55 @@ Location: `/root/clawd/harvey-projects/zuma-ro-pwa/data/`
 
 ---
 
+### 3. Successfully Imported ro_stockwhs Data
+**Status:** ✅ COMPLETE - 909 rows imported
+
+**Issues Fixed:**
+- CSV had wrapping quotes around entire rows
+- Double quotes in article names (`""` → `"`)
+- Embedded newlines in 3 article codes
+- Missing `100%_2` column in header
+- `no` column renamed to `row_num` (PostgreSQL reserved word)
+
+**Table Structure Updated:**
+- Recreated table with correct column order
+- 25 columns total (including id and created_at)
+- All percentage columns as VARCHAR(10)
+
+**Files Created:**
+- `scripts/clean_ro_stockwhs.py` - Python script for cleaning and importing
+- `import_guide_ro_stockwhs.md` - Complete step-by-step guide
+
+---
+
 ## Next Steps
 
-1. Run the ro_stockwhs import script with your CSV file
-2. Import ro_process data (if needed)
-3. Verify ro_whs_readystock calculations are working
-4. Test the application with imported data
+1. ✅ ro_recommendations - DONE
+2. ✅ ro_stockwhs - DONE  
+3. ⬜ Import ro_process data (if needed)
+4. ⬜ Verify ro_whs_readystock calculations are working
+5. ⬜ Test the application with imported data
+
+---
+
+## Files Created/Modified
+
+### Documentation:
+- `opencode_kimi_k25.md` - This progress file
+- `import_guide_ro_stockwhs.md` - Complete import guide
+
+### Scripts:
+- `scripts/clean_ro_stockwhs.py` - Python cleaner + importer
+- `scripts/fix-and-import-ro_stockwhs.sh` - Bash script (Linux)
+- `scripts/fix-and-import-ro_stockwhs.bat` - Batch script (Windows)
+- `scripts/clean-csv.bat` - Simple Windows cleaner
+- `scripts/import-ro-recommendations.sh` - Recommendations import
+
+### Data Files (Downloaded):
+- `data/ro_recommendations (forSupabase RO Input jatim).csv`
+- `data/ro_stockwhs (Rekapan Box - Mutasi Box WHS).csv`
+- `data/ro_process (roDatabase - RO WHS App).csv`
+- `data/ro_readystock (READY STOCK - RO App - Mutasi Box WHS).csv`
 
 ---
 
@@ -107,3 +150,5 @@ Location: `/root/clawd/harvey-projects/zuma-ro-pwa/data/`
 - ro_recommendations: Headers have spaces, imported successfully
 - ro_stockwhs: Headers are comma-separated but wrapped in quotes, needs script fix
 - ro_process: Structure already matches migration files
+- **Total rows imported:** 909 (ro_stockwhs) + recommendations data
+- **Cleaning script handles:** quotes, newlines, column mismatches automatically
