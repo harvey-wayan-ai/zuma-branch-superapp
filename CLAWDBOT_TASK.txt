@@ -1,0 +1,19 @@
+TASK: Push GitHub changes for zuma-ro-pwa project
+
+PRIORITY: HIGH
+
+ACTION REQUIRED:
+1. Navigate to: /root/clawd/harvey-projects/zuma-ro-pwa
+2. Stage these files:
+   - opencode_kimi_k25.md
+   - scripts/fix-and-import-ro_stockwhs.sh
+   - scripts/import-ro-recommendations.sh
+3. Commit with message: "feat: Add database import scripts and progress documentation"
+4. Push to origin master
+
+CONTEXT:
+- Fixed ro_recommendations table structure for CSV import
+- Created automated import script for ro_stockwhs
+- Documented all progress in opencode_kimi_k25.md
+
+Please complete this task and confirm.
