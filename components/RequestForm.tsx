@@ -26,6 +26,8 @@ export default function RequestForm() {
   const [showArticleSelector, setShowArticleSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGender, setSelectedGender] = useState<string>('ALL');
+  const [storeSearchQuery, setStoreSearchQuery] = useState('');
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
 
   // Store list for Jatim Area Supervisor
   const stores = [
@@ -173,23 +175,112 @@ export default function RequestForm() {
           <Store className="w-4 h-4 text-[#0D3B2E]" />
           Destination Store
         </label>
-        <select
-          value={selectedStore}
-          onChange={(e) => setSelectedStore(e.target.value)}
-          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
-        >
-          <option value="">Select Store</option>
-          <optgroup label="Regular Stores">
-            {stores.map((store) => (
-              <option key={store} value={store}>{store}</option>
-            ))}
-          </optgroup>
-          <optgroup label="Special Options">
-            {specialStores.map((store) => (
-              <option key={store} value={store}>{store}</option>
-            ))}
-          </optgroup>
-        </select>
+        <div className="relative">
+          {/* Searchable Input */}
+          <div className="relative">
+            <input
+              type="text"
+              value={storeSearchQuery}
+              onChange={(e) => {
+                setStoreSearchQuery(e.target.value);
+                setShowStoreDropdown(true);
+              }}
+              onFocus={() => setShowStoreDropdown(true)}
+              placeholder={selectedStore || "Search or select store..."}
+              className="w-full p-3 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Dropdown */}
+          {showStoreDropdown && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+              {/* Regular Stores Section */}
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 sticky top-0">
+                Regular Stores
+              </div>
+              {stores
+                .filter(store => store.toLowerCase().includes(storeSearchQuery.toLowerCase()))
+                .map((store) => (
+                  <button
+                    key={store}
+                    onClick={() => {
+                      setSelectedStore(store);
+                      setStoreSearchQuery('');
+                      setShowStoreDropdown(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
+                      selectedStore === store ? 'bg-[#00D084]/10 text-[#0D3B2E] font-medium' : 'text-gray-700'
+                    }`}
+                  >
+                    {store}
+                  </button>
+                ))}
+              
+              {/* Special Options Section */}
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 sticky top-0 border-t">
+                Special Options
+              </div>
+              {specialStores
+                .filter(store => store.toLowerCase().includes(storeSearchQuery.toLowerCase()))
+                .map((store) => (
+                  <button
+                    key={store}
+                    onClick={() => {
+                      setSelectedStore(store);
+                      setStoreSearchQuery('');
+                      setShowStoreDropdown(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors ${
+                      selectedStore === store ? 'bg-[#00D084]/10 text-[#0D3B2E] font-medium' : 'text-gray-700'
+                    }`}
+                  >
+                    {store}
+                  </button>
+                ))}
+              
+              {/* No results */}
+              {[...stores, ...specialStores].filter(store => 
+                store.toLowerCase().includes(storeSearchQuery.toLowerCase())
+              ).length === 0 && (
+                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                  No stores found
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Click outside to close */}
+          {showStoreDropdown && (
+            <div 
+              className="fixed inset-0 z-40"
+              onClick={() => setShowStoreDropdown(false)}
+            />
+          )}
+        </div>
+        
+        {/* Selected Store Display */}
+        {selectedStore && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm text-gray-600">Selected:</span>
+            <span className="text-sm font-medium text-[#0D3B2E] bg-[#00D084]/10 px-2 py-1 rounded">
+              {selectedStore}
+            </span>
+            <button
+              onClick={() => {
+                setSelectedStore('');
+                setStoreSearchQuery('');
+              }}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Articles List */}
