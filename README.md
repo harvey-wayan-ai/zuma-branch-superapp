@@ -133,12 +133,80 @@ The app features a modern, responsive dark theme with Zuma branding, optimized f
 | assay_status | TEXT | Stock status (FULL/BROKEN) |
 | broken_sizes | TEXT | Missing size details |
 
-### Business Logic
+### Business Logic & Calculation
+
+#### Core Formula
 ```
 ro_whs_readystock = ro_stockwhs - ro_process
 ```
 
-Ready stock is automatically calculated by subtracting active RO allocations from master warehouse stock. This is handled via PostgreSQL triggers for real-time updates.
+#### Detailed Calculation Logic
+
+**Available Stock Calculation:**
+```sql
+-- DDD Available Stock
+ro_whs_readystock.ddd_available = 
+    ro_stockwhs.ddd_stock - 
+    SUM(ro_process.boxes_allocated_ddd 
+        WHERE status NOT IN ('COMPLETED', 'CANCELLED'))
+
+-- LJBB Available Stock
+ro_whs_readystock.ljbb_available = 
+    ro_stockwhs.ljbb_stock - 
+    SUM(ro_process.boxes_allocated_ljbb 
+        WHERE status NOT IN ('COMPLETED', 'CANCELLED'))
+
+-- Total Available
+ro_whs_readystock.total_available = 
+    ddd_available + ljbb_available
+```
+
+#### Join Logic
+- **Primary Key:** `article_code` (VARCHAR)
+- **Join:** `ro_stockwhs.article_code` = `ro_process.article_code`
+- **Aggregation:** GROUP BY article_code
+
+#### Status Rules (ro_process)
+
+**Active statuses** (reduce available stock):
+- `QUEUE` - Waiting for approval
+- `APPROVED` - Approved, waiting for picking
+- `PICKING` - Being picked in warehouse
+- `PICK_VERIFIED` - Picking completed
+- `READY_TO_SHIP` - Ready for delivery
+- `IN_DELIVERY` - Out for delivery
+- `ARRIVED` - Arrived at store
+
+**Inactive statuses** (do NOT reduce stock):
+- `COMPLETED` - Order finished
+- `CANCELLED` - Order cancelled
+
+#### Auto-Calculation Triggers
+
+1. **On ro_process changes** (INSERT/UPDATE/DELETE)
+   - Automatically recalculates ro_whs_readystock
+   - Updates affected article_code only
+
+2. **On ro_stockwhs updates**
+   - Triggers recalculation for updated articles
+   - Maintains real-time accuracy
+
+3. **On ro_stockwhs insert/update**
+   - Auto-calculates total_stock = ddd_stock + ljbb_stock
+
+#### Data Flow
+```
+WHS System → ro_stockwhs (master stock)
+                    ↓
+RO Request → ro_process (allocations)
+                    ↓
+            ro_whs_readystock (available)
+                    ↓
+         RO Recommendations (with stock check)
+```
+
+#### Views
+- `ro_recommendations_with_stock` - Joins recommendations with real-time available stock status (AVAILABLE/PARTIAL/OUT_OF_STOCK)
 
 ## 🚀 Live Demo
 
