@@ -124,35 +124,75 @@ create table articles (
 
 ---
 
-### Table 3: `warehouse_stock` (Master Stock Source)
+### Table 3: `ro_stockwhs` (Master Stock Source)
 **Single Source of Truth** for all warehouse inventory.
 
 ```sql
--- Purpose: Unified warehouse stock levels
--- Updated: Real-time or near real-time from inventory system
+-- Purpose: Master warehouse stock levels (DDD + LJBB)
+-- Updated: From Google Sheets sync
 
-create table warehouse_stock (
+create table ro_stockwhs (
   id uuid primary key default gen_random_uuid(),
-  article_code varchar(50) references articles(code),
-  warehouse_id uuid references warehouses(id),
-  
-  -- Stock Levels
-  available_boxes int,               -- Available for allocation
-  reserved_boxes int,                -- Reserved for pending orders
-  total_boxes int,                   -- Total physical stock
-  
-  -- Location-specific
-  location_code varchar(50),         -- DDD, LJBB, etc.
-  
-  -- Metadata
-  last_updated timestamp default now(),
-  
-  -- Constraints
-  unique(article_code, warehouse_id, location_code)
+  article_code varchar(50) not null unique,
+  article_name varchar(255),
+  ddd_stock int default 0,           -- DDD warehouse physical stock
+  ljbb_stock int default 0,          -- LJBB warehouse physical stock
+  total_stock int default 0,         -- Total across all locations
+  last_updated timestamp default now()
 );
 ```
 
-**Key Point**: Both `ro_recommendations` and `articles` reference this table for stock display.
+### View: `ro_whs_readystock` (Available Stock)
+**Dynamic VIEW** that calculates real-time available stock for new ROs.
+
+```sql
+-- Purpose: Available stock = ro_stockwhs - active ro_process allocations
+-- Formula: Physical stock minus boxes allocated to active ROs
+-- Auto-updates: When either ro_stockwhs or ro_process changes
+
+CREATE OR REPLACE VIEW ro_whs_readystock AS
+SELECT 
+    s.article_code,
+    s.article_name,
+    -- DDD available: DDD stock minus allocated in active processes
+    GREATEST(0, 
+        COALESCE(s.ddd_stock, 0) - 
+        COALESCE(SUM(CASE 
+            WHEN p.status IN ('QUEUE', 'PROCESSING', 'DELIVERY', 'COMPLETE') 
+            THEN p.boxes_allocated_ddd 
+            ELSE 0 
+        END), 0)
+    ) AS ddd_available,
+    -- LJBB available: LJBB stock minus allocated in active processes  
+    GREATEST(0, 
+        COALESCE(s.ljbb_stock, 0) - 
+        COALESCE(SUM(CASE 
+            WHEN p.status IN ('QUEUE', 'PROCESSING', 'DELIVERY', 'COMPLETE') 
+            THEN p.boxes_allocated_ljbb 
+            ELSE 0 
+        END), 0)
+    ) AS ljbb_available,
+    -- Total available: Total stock minus all allocated boxes
+    GREATEST(0, 
+        COALESCE(s.total_stock, 0) - 
+        COALESCE(SUM(CASE 
+            WHEN p.status IN ('QUEUE', 'PROCESSING', 'DELIVERY', 'COMPLETE') 
+            THEN (p.boxes_allocated_ddd + p.boxes_allocated_ljbb)
+            ELSE 0 
+        END), 0)
+    ) AS total_available,
+    NOW() AS last_calculated
+FROM ro_stockwhs s
+LEFT JOIN ro_process p ON s.article_code = p.article_code
+GROUP BY s.article_code, s.article_name, s.ddd_stock, s.ljbb_stock, s.total_stock;
+```
+
+**Key Points**:
+- **Was**: Static table with triggers (003_create_ro_whs_readystock.sql)
+- **Now**: Dynamic VIEW (007_convert_readystock_to_view.sql) - no sync jobs needed
+- **Statuses subtracted**: QUEUE, PROCESSING, DELIVERY, COMPLETE
+- **Statuses NOT subtracted**: DNPB done, CANCELLED, COMPLETED
+- Both `ro_recommendations` and `articles` reference this VIEW for stock display
 
 ---
 
@@ -474,41 +514,149 @@ POST /api/ro/submit
 
 ---
 
-## Open Questions for You
+## Request Form Button Logic (Finalized)
 
-1. **Recommendation Algorithm**: What's the exact formula for calculating `suggested_boxes`?
-   - Current: `(Sales Velocity × Lead Time) - Current Stock`
-   - Any minimum/maximum constraints?
-   - Seasonal adjustments?
+### AUTO Button - REPLACE Mode
 
-2. **Stock Source**: Which warehouse locations should be included?
-   - DDD only?
-   - LJBB only?
-   - Both combined?
-   - User-selectable per article?
+**Purpose**: Fetch system-generated recommendations and replace current list
 
-3. **Recommendation Refresh**: How often should auto-generated list update?
-   - Real-time (on every store selection)?
-   - Hourly batch job?
-   - Daily at specific time?
+**Behavior**:
+1. **Truncate** - Clear `requestItems` array completely
+2. **Fetch** - Query `ro_recommendations` WHERE store_id = selected_store
+3. **Join** - With `ro_whs_readystock` VIEW for real-time stock levels
+4. **Populate** - Fill `requestItems` with suggested quantities from algorithm
 
-4. **Priority Levels**: What defines "urgent" vs "normal" vs "low"?
-   - Weeks of stock remaining?
-   - Sales velocity?
-   - Store-specific rules?
+**User Actions**:
+- Click once → Load recommendations
+- Click again → Fresh fetch (replace again, no duplicates)
+- Edit quantity → Update specific article boxes
+- Remove article → Delete from list
+- Clear All → Empty list completely
 
-5. **Existing Tables**: Which tables already exist in your Supabase?
-   - I saw `ro_items`, `ro_sessions`, `stores`, `articles` - are these populated?
-   - Do you have `warehouse_stock` or similar?
+**Stock Display**:
+- Shows `ddd_available`, `ljbb_available`, `total_available` from `ro_whs_readystock`
+- Real-time calculation: Physical stock - Active RO allocations
+
+---
+
+### +Add Button - APPEND Mode
+
+**Purpose**: Manually add articles from catalog to existing list
+
+**Behavior**:
+1. **Open** - Article selector modal
+2. **Search** - Query `articles` table with text filter
+3. **Join** - With `ro_whs_readystock` VIEW for stock display
+4. **Filter** - Exclude already-added articles (both auto and manual)
+5. **Append** - Add selected article to `requestItems` with default 1 box
+
+**User Actions**:
+- Search by code, name, or series
+- Filter by gender (ALL/MEN/WOMEN/KIDS)
+- Select article → Appends to list
+- Can add multiple articles
+- Modal stays open until "Done" clicked
+
+**Stock Display**:
+- Same as AUTO: Shows DDD/LJBB/Total from `ro_whs_readystock`
+- Real-time available stock
+
+---
+
+### Stock Validation (BLOCK Strategy)
+
+**Display Logic**:
+- 🟢 **Green Badge**: `requested <= available` - OK to order
+- 🟡 **Yellow Badge**: `requested > available` but `available > 0` - Warning
+- 🔴 **Red Badge**: `available = 0` - Out of stock
+
+**Validation Rules**:
+1. **Real-time**: Show warning badge if requested > available
+2. **On Submit**: BLOCK submission if any article has `requested > available`
+3. **Error Message**: "Only X boxes available for [article_code]. Please reduce quantity."
+4. **No Auto-adjust**: User must manually fix, system doesn't auto-correct
+
+**Stock Source**:
+- Both AUTO and +Add use `ro_whs_readystock` VIEW
+- Formula: `ro_stockwhs - active_ro_process_allocations`
+- Subtracts statuses: QUEUE, PROCESSING, DELIVERY, COMPLETE
+- Does NOT subtract: DNPB done, CANCELLED, COMPLETED
+
+---
+
+### State Flow Diagram
+
+```
+Initial State:
+  requestItems = []
+
+AUTO Button Clicked:
+  1. Clear requestItems (truncate)
+  2. Fetch ro_recommendations for store
+  3. Join with ro_whs_readystock
+  4. requestItems = recommendations
+
++Add Button Clicked:
+  1. Open article selector
+  2. Search articles (exclude already added)
+  3. Join with ro_whs_readystock for stock
+  4. On select: requestItems.push(article with 1 box)
+
+Submit Button Clicked:
+  1. Validate: All items have requested <= available
+  2. If invalid: Show error, block submission
+  3. If valid: Insert to ro_process table
+  4. Generate RO ID via Supabase function
+```
+
+---
+
+## Key Differences Summary
+
+| Feature | AUTO Button | +Add Button |
+|---------|-------------|-------------|
+| **Action** | REPLACE list | APPEND to list |
+| **Source** | ro_recommendations | articles table |
+| **Quantity** | Pre-calculated suggestion | Default 1 box |
+| **Stock** | From ro_whs_readystock | From ro_whs_readystock |
+| **Duplicates** | Fresh fetch (no dupes) | Filtered out (no dupes) |
+| **Use Case** | System suggestions | User custom additions |
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Data Layer
+- [ ] Verify ro_recommendations table exists and populated
+- [ ] Verify ro_whs_readystock VIEW is working
+- [ ] Create API: GET /api/ro/recommendations?store_id={id}
+- [ ] Create API: GET /api/articles/search?q={query}
+- [ ] Create API: POST /api/ro/submit
+
+### Phase 2: Frontend State
+- [ ] Update RequestForm state management
+- [ ] Implement requestItems array
+- [ ] Handle AUTO button (truncate + fetch)
+- [ ] Handle +Add button (append + filter)
+
+### Phase 3: Stock Display
+- [ ] Show stock badges on all articles
+- [ ] Color coding (green/yellow/red)
+- [ ] Real-time validation
+
+### Phase 4: Submit Validation
+- [ ] Block if requested > available
+- [ ] Show specific error messages
+- [ ] Insert to ro_process on success
 
 ---
 
 ## Next Steps
 
-1. **Confirm existing schema** - Check what tables already exist
-2. **Create missing tables** - `ro_recommendations`, views
-3. **Implement recommendation algorithm** - SQL function or application logic
-4. **Build API endpoints** - For recommendations and article search
-5. **Update frontend** - Integrate dual-source selection
+1. **Verify Database Schema** - Check ro_recommendations, ro_whs_readystock VIEW
+2. **Build API Endpoints** - Recommendations, search, submit
+3. **Update RequestForm.tsx** - Implement button logic
+4. **Test Stock Validation** - Ensure BLOCK strategy works
+5. **Integration Testing** - Full flow from store selection to submission
 
-Let me know your answers to the open questions and I'll help you implement the Supabase schema!
+Ready to build when you are!
