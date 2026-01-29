@@ -175,6 +175,116 @@ Location: `/root/clawd/harvey-projects/zuma-ro-pwa/data/`
 
 ---
 
+## Phase 1: API Endpoints - COMPLETED ✅
+
+**Date:** 2026-01-29
+
+### Achievements
+
+#### 1. Created 3 API Endpoints
+All endpoints implemented, tested, and deployed to Vercel.
+
+**Endpoint 1: GET /api/ro/recommendations**
+- Fetches auto-generated recommendations by store name
+- Joins with `ro_whs_readystock` VIEW for real-time stock
+- Returns priority levels (urgent/normal/low) based on tier
+- **File:** `app/api/ro/recommendations/route.ts`
+
+**Endpoint 2: GET /api/articles**
+- Searches articles from `ro_stockwhs` catalog
+- Supports query search and gender filtering
+- Infers gender/series from article code (M=MEN, W=WOMEN, K=KIDS)
+- **File:** `app/api/articles/route.ts`
+
+**Endpoint 3: POST /api/ro/submit**
+- Validates stock availability before submission
+- Inserts into `ro_process` table
+- Auto-generates RO ID (format: RO-YYMM-XXXX)
+- Returns created RO details
+- **File:** `app/api/ro/submit/route.ts`
+
+#### 2. Supabase Client Configuration
+**File:** `lib/supabase.ts`
+```typescript
+export const SCHEMA = 'branch_super_app_clawdbot';
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  db: { schema: SCHEMA }
+});
+```
+
+#### 3. Deployment Status
+- ✅ All changes committed: `88aea31`
+- ✅ Pushed to GitHub: `harvey-wayan-ai/zuma-branch-superapp`
+- ✅ Deployed to Vercel: `https://zuma-ro-pwa.vercel.app`
+- ✅ Build successful (11 routes generated)
+
+---
+
+## Next Steps (Phase 2)
+
+### Frontend Integration - TODO
+
+1. **Update RequestForm.tsx State Management**
+   - Add `requestItems` array state
+   - Track auto-generated vs manual items
+   - Manage loading states
+
+2. **Implement AUTO Button Logic**
+   - Truncate `requestItems` array
+   - Call `/api/ro/recommendations?store_name={store}`
+   - Populate list with suggested quantities
+   - Show stock badges (green/yellow/red)
+
+3. **Implement +Add Button Logic**
+   - Open article selector modal
+   - Call `/api/articles?q={query}&gender={gender}`
+   - Filter out already-added articles
+   - Append selected articles to `requestItems`
+
+4. **Stock Validation**
+   - Real-time validation: requested ≤ available
+   - Color-coded badges:
+     - 🟢 Green: requested ≤ available
+     - 🟡 Yellow: requested > available but available > 0
+     - 🔴 Red: available = 0
+   - Block submission if any article exceeds stock
+
+5. **Submit Integration**
+   - Call `/api/ro/submit` with requestItems
+   - Show success/error feedback
+   - Reset form on success
+
+---
+
+## API Testing
+
+### Test Commands
+
+```bash
+# Test recommendations endpoint
+curl "https://zuma-ro-pwa.vercel.app/api/ro/recommendations?store_name=Zuma%20Matos"
+
+# Test articles endpoint
+curl "https://zuma-ro-pwa.vercel.app/api/articles?q=airmove&gender=MEN"
+
+# Test submit endpoint
+curl -X POST "https://zuma-ro-pwa.vercel.app/api/ro/submit" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "store_name": "Zuma Matos",
+    "articles": [{"code": "M1AMV102", "name": "Test", "boxes": 2, "warehouse_stock": {"total_available": 10}}]
+  }'
+```
+
+---
+
+## Documentation Updated
+
+- ✅ `docs/RO_REQUEST_ARCHITECTURE.md` - Added complete API documentation
+- ✅ `opencode_kimi_k25.md` - This file (progress tracking)
+
+---
+
 ## Notes
 
 - All CSV files use comma (`,`) delimiter
@@ -183,3 +293,4 @@ Location: `/root/clawd/harvey-projects/zuma-ro-pwa/data/`
 - ro_process: Structure already matches migration files
 - **Total rows imported:** 909 (ro_stockwhs) + recommendations data
 - **Cleaning script handles:** quotes, newlines, column mismatches automatically
+- **API Schema:** All endpoints use `branch_super_app_clawdbot` schema
