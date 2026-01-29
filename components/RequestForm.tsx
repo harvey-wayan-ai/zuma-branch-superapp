@@ -292,7 +292,7 @@ export default function RequestForm() {
           </div>
           <div className="flex gap-2">
             {/* Auto Generate Button - Only for regular stores */}
-            <Button
+            <button
               onClick={() => {
                 if (!selectedStore) {
                   alert('Please select a destination store first!');
@@ -305,15 +305,18 @@ export default function RequestForm() {
                 // TODO: Fetch auto-generated recommendations from Supabase
                 alert(`Auto-generate recommendations for ${selectedStore}\n\nThis will fetch recommendations from ro_recommendations table.`);
               }}
-              className="bg-gradient-to-r from-[#0D3B2E] to-[#1a5a48] hover:from-[#1a5a48] hover:to-[#0D3B2E] text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-              size="sm"
               disabled={!selectedStore || specialStores.includes(selectedStore)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-[#00D084] bg-white text-[#00D084] font-medium text-sm hover:bg-[#00D084]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              {/* Sparkles Icon */}
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/>
+                <path d="M20 2v4"/>
+                <path d="M22 4h-4"/>
+                <circle cx="4" cy="20" r="2"/>
               </svg>
-              Auto Generate
-            </Button>
+              AUTO
+            </button>
             
             <Button
               onClick={() => {
