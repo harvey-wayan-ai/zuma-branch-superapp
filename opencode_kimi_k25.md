@@ -113,13 +113,44 @@ Location: `/root/clawd/harvey-projects/zuma-ro-pwa/data/`
 
 ---
 
+### 4. RequestForm UI Enhancements
+**Status:** ✅ COMPLETE
+
+**Features Added:**
+- **Auto Generate Button**: 
+  - White background with green border (#00D084)
+  - Sparkles icon (✨)
+  - "AUTO" text in green
+  - Pill shape (rounded-full)
+  - Only enabled for regular stores (not Wholesale/Consignment/Other Need)
+  
+- **Searchable Store Dropdown**:
+  - Custom searchable input with dropdown
+  - Groups: Regular Stores and Special Options
+  - Scroll capability for long lists
+  - Shows selected store with clear button
+  - Click outside to close
+  
+- **Special Store Options**:
+  - Other Need
+  - Wholesale
+  - Consignment
+
+**Design Reference:**
+- Downloaded from Google Drive: `Frame 1.png`
+- Matches Figma design specifications
+
+---
+
 ## Next Steps
 
 1. ✅ ro_recommendations - DONE
 2. ✅ ro_stockwhs - DONE  
-3. ⬜ Import ro_process data (if needed)
-4. ⬜ Verify ro_whs_readystock calculations are working
-5. ⬜ Test the application with imported data
+3. ✅ RequestForm UI - DONE
+4. ⬜ Connect Auto Generate to Supabase (fetch recommendations)
+5. ⬜ Import ro_process data (if needed)
+6. ⬜ Verify ro_whs_readystock calculations are working
+7. ⬜ Test the application with imported data
 
 ---
 
