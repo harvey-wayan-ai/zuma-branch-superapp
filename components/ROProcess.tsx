@@ -13,6 +13,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface ROArticle {
+  kodeArtikel: string;
+  namaArtikel: string;
+  dddBoxes: number;
+  ljbbBoxes: number;
+}
+
 interface ROItem {
   id: string;
   store: string;
@@ -22,6 +29,7 @@ interface ROItem {
   totalArticles: number;
   dddBoxes: number;
   ljbbBoxes: number;
+  articles: ROArticle[];
 }
 
 type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'COMPLETED' | 'DELIVERY' | 'DNPB PROCESS';
@@ -40,54 +48,63 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
 // Real data from Google Sheets
 const realROData: ROItem[] = [
   { 
-    id: 'RO-2511-0007', 
-    store: 'Zuma Matos', 
-    createdAt: '26/11/2025', 
+    id: 'RO-2511-0007',
+    store: 'Zuma Matos',
+    createdAt: '26/11/2025',
     currentStatus: 'DELIVERY',
     totalBoxes: 16,
     totalArticles: 11,
     dddBoxes: 12,
-    ljbbBoxes: 4
+    ljbbBoxes: 4,
+    articles: [
+      { kodeArtikel: 'M1CAV201', namaArtikel: 'MEN CLASSIC 1, JET BLACK', dddBoxes: 6, ljbbBoxes: 0 },
+      { kodeArtikel: 'M1DLV101', namaArtikel: 'MEN DALLAS 1, JET BLACK', dddBoxes: 1, ljbbBoxes: 0 },
+      { kodeArtikel: 'M1SLV114', namaArtikel: 'MEN SLIDE MAX 14, BLACK', dddBoxes: 1, ljbbBoxes: 0 },
+    ]
   },
-  { 
-    id: 'RO-2512-0008', 
-    store: 'Zuma Sunrise Mall', 
-    createdAt: '02/12/2025', 
+  {
+    id: 'RO-2512-0008',
+    store: 'Zuma Sunrise Mall',
+    createdAt: '02/12/2025',
     currentStatus: 'DELIVERY',
     totalBoxes: 9,
     totalArticles: 8,
     dddBoxes: 4,
-    ljbbBoxes: 5
+    ljbbBoxes: 5,
+    articles: []
   },
-  { 
-    id: 'RO-2512-0009', 
-    store: 'Zuma Royal Plaza', 
-    createdAt: '02/12/2025', 
+  {
+    id: 'RO-2512-0009',
+    store: 'Zuma Royal Plaza',
+    createdAt: '02/12/2025',
     currentStatus: 'DNPB PROCESS',
     totalBoxes: 11,
     totalArticles: 8,
     dddBoxes: 11,
-    ljbbBoxes: 0
+    ljbbBoxes: 0,
+    articles: []
   },
-  { 
-    id: 'RO-2512-0010', 
-    store: 'Zuma Royal Plaza', 
-    createdAt: '02/12/2025', 
+  {
+    id: 'RO-2512-0010',
+    store: 'Zuma Royal Plaza',
+    createdAt: '02/12/2025',
     currentStatus: 'COMPLETED',
     totalBoxes: 32,
     totalArticles: 1,
     dddBoxes: 32,
-    ljbbBoxes: 0
+    ljbbBoxes: 0,
+    articles: []
   },
-  { 
-    id: 'RO-2512-0011', 
-    store: 'Zuma Sunrise Mall', 
-    createdAt: '02/12/2025', 
+  {
+    id: 'RO-2512-0011',
+    store: 'Zuma Sunrise Mall',
+    createdAt: '02/12/2025',
     currentStatus: 'DNPB PROCESS',
     totalBoxes: 85,
     totalArticles: 1,
     dddBoxes: 0,
-    ljbbBoxes: 85
+    ljbbBoxes: 85,
+    articles: []
   },
 ];
 
@@ -301,10 +318,10 @@ export default function ROProcess() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button 
-            onClick={() => alert('Save to Google Sheets - Feature coming soon!')}
+            onClick={() => alert('View Articles - Layer 3 coming soon!')}
             className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
           >
-            <RefreshCw className="w-4 h-4" /> Save Changes
+            <RefreshCw className="w-4 h-4" /> View Articles
           </button>
           <button 
             onClick={() => {

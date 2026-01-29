@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Minus, Trash2, Package, Store, Calendar, Send } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Store, Send, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ArticleItem {
@@ -11,15 +11,22 @@ interface ArticleItem {
   boxes: number;
 }
 
+interface AvailableArticle {
+  code: string;
+  name: string;
+  series: string;
+  gender: string;
+}
+
 export default function RequestForm() {
   const [selectedStore, setSelectedStore] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [articles, setArticles] = useState<ArticleItem[]>([
-    { id: '1', code: 'M1AMV102', name: 'MEN AIRMOVE 2, INDIGO TAN', boxes: 1 },
-  ]);
+  const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [notes, setNotes] = useState('');
+  const [showArticleSelector, setShowArticleSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGender, setSelectedGender] = useState<string>('ALL');
 
-  // Dummy store list for Jatim Area Supervisor
+  // Store list for Jatim Area Supervisor
   const stores = [
     'Zuma Tunjungan Plaza',
     'Zuma Royal Plaza',
@@ -28,35 +35,56 @@ export default function RequestForm() {
     'Zuma Ciputra World',
   ];
 
-  // Dummy article list
-  const availableArticles = [
-    { code: 'M1AMV102', name: 'MEN AIRMOVE 2, INDIGO TAN' },
-    { code: 'M1CLV201', name: 'MEN CLASSIC 1, BLACK' },
-    { code: 'M1BSV301', name: 'MEN BLACKSERIES, NAVY' },
-    { code: 'W1ELV101', name: 'WOMEN ELSA, PINK' },
-    { code: 'W1SLV201', name: 'WOMEN SLIDE PUFFY, WHITE' },
-    { code: 'K1AMV101', name: 'KIDS AIRMOVE, BLUE' },
-    { code: 'M1STV101', name: 'MEN STRIPE, GREY' },
-    { code: 'M1LUV101', name: 'MEN LUCA, BROWN' },
-    { code: 'W1ONV101', name: 'WOMEN ONYX, BLACK' },
-    { code: 'M1DAV101', name: 'MEN DALLAS, TAN' },
+  // Available articles database
+  const availableArticles: AvailableArticle[] = [
+    { code: 'M1AMV102', name: 'MEN AIRMOVE 2, INDIGO TAN', series: 'AIRMOVE', gender: 'MEN' },
+    { code: 'M1AMV103', name: 'MEN AIRMOVE 2, BLACK WHITE', series: 'AIRMOVE', gender: 'MEN' },
+    { code: 'M1CLV201', name: 'MEN CLASSIC 1, BLACK', series: 'CLASSIC', gender: 'MEN' },
+    { code: 'M1CLV202', name: 'MEN CLASSIC 1, WHITE', series: 'CLASSIC', gender: 'MEN' },
+    { code: 'M1BSV301', name: 'MEN BLACKSERIES, NAVY', series: 'BLACKSERIES', gender: 'MEN' },
+    { code: 'M1BSV302', name: 'MEN BLACKSERIES, BLACK', series: 'BLACKSERIES', gender: 'MEN' },
+    { code: 'M1STV101', name: 'MEN STRIPE, GREY', series: 'STRIPE', gender: 'MEN' },
+    { code: 'M1LUV101', name: 'MEN LUCA, BROWN', series: 'LUCA', gender: 'MEN' },
+    { code: 'M1DAV101', name: 'MEN DALLAS, TAN', series: 'DALLAS', gender: 'MEN' },
+    { code: 'W1ELV101', name: 'WOMEN ELSA, PINK', series: 'ELSA', gender: 'WOMEN' },
+    { code: 'W1ELV102', name: 'WOMEN ELSA, BLACK', series: 'ELSA', gender: 'WOMEN' },
+    { code: 'W1SLV201', name: 'WOMEN SLIDE PUFFY, WHITE', series: 'SLIDE PUFFY', gender: 'WOMEN' },
+    { code: 'W1SLV202', name: 'WOMEN SLIDE PUFFY, BLACK', series: 'SLIDE PUFFY', gender: 'WOMEN' },
+    { code: 'W1ONV101', name: 'WOMEN ONYX, BLACK', series: 'ONYX', gender: 'WOMEN' },
+    { code: 'K1AMV101', name: 'KIDS AIRMOVE, BLUE', series: 'AIRMOVE', gender: 'KIDS' },
+    { code: 'K1AMV102', name: 'KIDS AIRMOVE, RED', series: 'AIRMOVE', gender: 'KIDS' },
+    { code: 'K1CLV101', name: 'KIDS CLASSIC, BLACK', series: 'CLASSIC', gender: 'KIDS' },
   ];
 
-  const addArticle = () => {
-    const randomArticle = availableArticles[Math.floor(Math.random() * availableArticles.length)];
+  // Filter articles based on search and gender
+  const filteredArticles = availableArticles.filter(article => {
+    const matchesSearch = searchQuery === '' || 
+      article.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.series.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesGender = selectedGender === 'ALL' || article.gender === selectedGender;
+    
+    // Exclude already added articles
+    const notAdded = !articles.some(a => a.code === article.code);
+    
+    return matchesSearch && matchesGender && notAdded;
+  });
+
+  const addArticle = (article: AvailableArticle) => {
     const newItem: ArticleItem = {
       id: Date.now().toString(),
-      code: randomArticle.code,
-      name: randomArticle.name,
+      code: article.code,
+      name: article.name,
       boxes: 1,
     };
     setArticles([...articles, newItem]);
+    // Keep modal open, just clear search
+    setSearchQuery('');
   };
 
   const removeArticle = (id: string) => {
-    if (articles.length > 1) {
-      setArticles(articles.filter((item) => item.id !== id));
-    }
+    setArticles(articles.filter((item) => item.id !== id));
   };
 
   const updateBoxes = (id: string, boxes: number) => {
@@ -71,7 +99,18 @@ export default function RequestForm() {
   const totalPairs = totalBoxes * 12;
 
   const handleSubmit = () => {
-    alert(`RO Submitted!\nStore: ${selectedStore}\nArticles: ${articles.length}\nTotal Boxes: ${totalBoxes}\nTotal Pairs: ${totalPairs}`);
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    const formattedTime = now.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    alert(`RO Submitted!\nStore: ${selectedStore}\nArticles: ${articles.length}\nTotal Boxes: ${totalBoxes}\nTotal Pairs: ${totalPairs}\nSubmitted: ${formattedDate} at ${formattedTime}`);
   };
 
   return (
@@ -103,20 +142,6 @@ export default function RequestForm() {
         </select>
       </div>
 
-      {/* Delivery Date */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-          <Calendar className="w-4 h-4 text-[#0D3B2E]" />
-          Requested Delivery Date
-        </label>
-        <input
-          type="date"
-          value={deliveryDate}
-          onChange={(e) => setDeliveryDate(e.target.value)}
-          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
-        />
-      </div>
-
       {/* Articles List */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -125,7 +150,7 @@ export default function RequestForm() {
             <p className="text-xs text-gray-500">Minimum 1 box per article (12 pairs)</p>
           </div>
           <Button
-            onClick={addArticle}
+            onClick={() => setShowArticleSelector(true)}
             className="bg-[#00D084] hover:bg-[#00B874] text-white"
             size="sm"
           >
@@ -134,35 +159,43 @@ export default function RequestForm() {
           </Button>
         </div>
 
-        <div className="divide-y divide-gray-100">
-          {articles.map((article, index) => (
-            <div key={article.id} className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500 font-mono">{article.code}</p>
-                  <p className="text-sm font-medium text-gray-900">{article.name}</p>
-                </div>
-                <button
-                  onClick={() => removeArticle(article.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                  disabled={articles.length <= 1}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+        {articles.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Package className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-sm mb-2">No articles selected</p>
+            <p className="text-gray-400 text-xs">Click the + Add button to select articles for this RO</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {articles.map((article) => (
+              <div key={article.id} className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-500 font-mono">{article.code}</p>
+                    <p className="text-sm font-medium text-gray-900">{article.name}</p>
+                  </div>
                   <button
-                    onClick={() => updateBoxes(article.id, article.boxes - 1)}
-                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"
-                    disabled={article.boxes <= 1}
+                    onClick={() => removeArticle(article.id)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
-                  
-                  <div className="text-center min-w-[60px]">
-                    <p className="text-lg font-bold text-[#0D3B2E]">{article.boxes}</p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateBoxes(article.id, article.boxes - 1)}
+                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+                      disabled={article.boxes <= 1}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+
+                    <div className="text-center min-w-[60px]">
+                      <p className="text-lg font-bold text-[#0D3B2E]">{article.boxes}</p>
                     <p className="text-xs text-gray-500">box</p>
                   </div>
                   
@@ -181,6 +214,7 @@ export default function RequestForm() {
             </div>
           ))}
         </div>
+      )}
       </div>
 
       {/* Notes */}
@@ -220,10 +254,124 @@ export default function RequestForm() {
         </div>
       </div>
 
+      {/* Article Selector Modal */}
+      {showArticleSelector && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-lg max-h-[80vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-[#0D3B2E] text-white">
+              <div>
+                <h3 className="font-semibold">Select Articles</h3>
+                <p className="text-xs opacity-80">{filteredArticles.length} available</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowArticleSelector(false);
+                  setSearchQuery('');
+                  setSelectedGender('ALL');
+                }}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search & Filter */}
+            <div className="p-4 border-b border-gray-100 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by code, name, or series..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                {['ALL', 'MEN', 'WOMEN', 'KIDS'].map((gender) => (
+                  <button
+                    key={gender}
+                    onClick={() => setSelectedGender(gender)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      selectedGender === gender
+                        ? 'bg-[#0D3B2E] text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {gender === 'ALL' ? 'All' : gender}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Article List */}
+            <div className="flex-1 overflow-y-auto">
+              {filteredArticles.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-gray-500">No articles found</p>
+                  <p className="text-gray-400 text-sm mt-1">Try a different search term</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {filteredArticles.map((article) => (
+                    <button
+                      key={article.code}
+                      onClick={() => addArticle(article)}
+                      className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-gray-500">{article.code}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                            article.gender === 'MEN' ? 'bg-blue-100 text-blue-700' :
+                            article.gender === 'WOMEN' ? 'bg-pink-100 text-pink-700' :
+                            'bg-green-100 text-green-700'
+                          }`}>
+                            {article.gender}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">{article.name}</p>
+                        <p className="text-xs text-gray-400">{article.series} Series</p>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#00D084] group-hover:text-white transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer with Done Button */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold text-[#0D3B2E]">{articles.length}</span> article(s) selected
+                </div>
+                <button
+                  onClick={() => {
+                    setShowArticleSelector(false);
+                    setSearchQuery('');
+                    setSelectedGender('ALL');
+                  }}
+                  className="px-6 py-2 bg-[#00D084] hover:bg-[#00B874] text-white font-medium rounded-lg transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         onClick={handleSubmit}
-        disabled={!selectedStore || !deliveryDate}
+        disabled={!selectedStore || articles.length === 0}
         className="w-full bg-[#00D084] hover:bg-[#00B874] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Send className="w-5 h-5 mr-2" />
