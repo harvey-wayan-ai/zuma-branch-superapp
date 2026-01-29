@@ -13,8 +13,14 @@ Both sources display **unified warehouse stock levels** for easier management.
 
 ### 1. Store Selection
 - User selects a store from dropdown
-- **Trigger**: Auto-generate button becomes active
-- System fetches recommendations for that store
+- **Options:**
+  - Regular stores (Zuma Tunjungan, Zuma Royal Plaza, etc.)
+  - **Special options for warehouse supervisor access:**
+    - `Other Need` - For miscellaneous stock requests
+    - `Wholesale` - For wholesale orders
+    - `Consignment` - For consignment stock
+- **Trigger**: Auto-generate button becomes active (only for regular stores)
+- System fetches recommendations for that store (if regular store selected)
 
 ### 2. Auto-Generated Request (Source 1)
 **Purpose**: System recommends articles that need replenishment
