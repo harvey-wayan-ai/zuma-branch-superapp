@@ -29,8 +29,29 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, data: [] });
     }
 
-    const transformedData = articles.map((article: any) => {
-      const code = article['Kode Artikel'];
+    // Group by Kode Artikel and aggregate stock
+    const articleMap = new Map();
+    (articles || []).forEach((row: any) => {
+      const code = row['Kode Artikel'];
+      if (!code) return;
+      
+      if (!articleMap.has(code)) {
+        articleMap.set(code, {
+          code: code,
+          name: row['Nama Artikel'],
+          ddd: 0,
+          ljbb: 0,
+          total: 0,
+        });
+      }
+      const art = articleMap.get(code);
+      art.ddd += Number(row['Stock Akhir DDD']) || 0;
+      art.ljbb += Number(row['Stock Akhir LJBB']) || 0;
+      art.total += Number(row['Stock Akhir Total']) || 0;
+    });
+
+    const transformedData = Array.from(articleMap.values()).map((article: any) => {
+      const code = article.code;
       
       let inferredGender = 'OTHER';
       if (code.startsWith('M')) inferredGender = 'MEN';
@@ -41,14 +62,14 @@ export async function GET(request: Request) {
       const series = seriesMatch ? seriesMatch[1] : 'UNKNOWN';
 
       return {
-        code: article['Kode Artikel'],
-        name: article['Nama Artikel'],
+        code: article.code,
+        name: article.name,
         series: series,
         gender: inferredGender,
         warehouse_stock: {
-          ddd_available: article['Stock Akhir DDD'] || 0,
-          ljbb_available: article['Stock Akhir LJBB'] || 0,
-          total_available: article['Stock Akhir Total'] || 0,
+          ddd_available: article.ddd,
+          ljbb_available: article.ljbb,
+          total_available: article.total,
         },
       };
     });
