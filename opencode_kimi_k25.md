@@ -564,3 +564,73 @@ Result: Can only fulfill 8 of 10 requested
   boxes_ubb: number;   // display only, not for retail
 }
 ```
+
+---
+
+## SESSION UPDATE - 2026-01-30 (DNPB Columns)
+
+### ✅ ADDED DNPB COLUMNS TO ro_process
+
+**New Columns:**
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `dnpb_number` | VARCHAR(100) | NULL | DNPB document number, e.g., `DNPB/DDD/WHS/2026/I/001` |
+| `dnpb_match` | BOOLEAN | FALSE | TRUE if dnpb_number matches transaction in transaksi tables |
+
+**Index Added:**
+- `idx_ro_process_dnpb_number` - For faster DNPB lookups
+
+**Migration File:**
+- `supabase/migrations/007_add_dnpb_columns.sql`
+
+**Documentation:**
+- `docs/DNPB_MATCHING_LOGIC.md` - Complete logic documentation
+
+### 🔄 FUTURE DNPB MATCHING LOGIC
+
+**Flow:**
+1. User enters DNPB number in RO Process page (at PICK_VERIFIED or READY_TO_SHIP stage)
+2. System saves to `ro_process.dnpb_number`
+3. System checks if DNPB exists in transaction tables:
+   - `supabase_transaksiDDD` (available)
+   - `supabase_transaksiLJBB` (available)
+   - `supabase_transaksiMBB` (available)
+   - `supabase_transaksiUBB` (NOT available yet)
+4. If match found → `dnpb_match = TRUE` → **Cancel calculations in master_mutasi_whs**
+5. If no match → `dnpb_match = FALSE` → Normal calculations continue
+
+**Impact on master_mutasi_whs:**
+- When `dnpb_match = TRUE`: Stock already moved via transaction, do NOT double-count
+- When `dnpb_match = FALSE`: Normal deduction from master_mutasi_whs
+
+### 📋 TODO (DNPB Feature)
+
+- [ ] Add DNPB input field in RO Process UI
+- [ ] Create API endpoint `/api/ro/update-dnpb`
+- [ ] Implement DNPB matching logic with transaction tables
+- [x] ~~Update master_mutasi_whs calculations to respect dnpb_match~~ ✅ DONE
+- [ ] Handle UBB transactions when table becomes available
+
+### ✅ VIEW UPDATED: master_mutasi_whs
+
+**Change:** Modified `ro_totals` CTE to only count RO allocations where `dnpb_match = FALSE`
+
+**Logic:**
+```sql
+ro_totals AS (
+    SELECT article_code,
+        sum(CASE WHEN dnpb_match = FALSE THEN boxes_allocated_ddd ELSE 0 END) AS ro_out_ddd,
+        sum(CASE WHEN dnpb_match = FALSE THEN boxes_allocated_ljbb ELSE 0 END) AS ro_out_ljbb
+    FROM ro_process
+    GROUP BY article_code
+)
+```
+
+**Result:** When `dnpb_match = TRUE`, the RO allocation is excluded from stock calculation (already recorded in transaksi tables).
+
+**Migration:** `008_update_master_mutasi_whs_dnpb_logic.sql`
+
+**Transaction Tables (for matching):**
+- `supabase_transkasiDDD` - "DNPB" column ✅
+- `supabase_transkasiLJBB` - "DNPB" column ✅
+- `supabase_transkasiMBB` - "DNPB" column ✅
