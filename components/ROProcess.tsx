@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Clock, 
   CheckCircle2, 
@@ -90,21 +90,23 @@ export default function ROProcess() {
     }
   };
 
-  const ONGOING_STATUSES: ROStatus[] = ['QUEUE', 'APPROVED', 'PICKING', 'PICK_VERIFIED', 'DNPB_PROCESS'];
-  const SHIPPING_STATUSES: ROStatus[] = ['READY_TO_SHIP', 'IN_DELIVERY', 'ARRIVED'];
-  
-  const filteredROList = roData.filter(ro => {
-    let matchesStatus = false;
-    if (filterStatus === 'ALL') matchesStatus = true;
-    else if (filterStatus === 'ONGOING') matchesStatus = ONGOING_STATUSES.includes(ro.currentStatus);
-    else if (filterStatus === 'SHIPPING') matchesStatus = SHIPPING_STATUSES.includes(ro.currentStatus);
-    else if (filterStatus === 'COMPLETE') matchesStatus = ro.currentStatus === 'COMPLETED';
+  const filteredROList = useMemo(() => {
+    const ONGOING_STATUSES: ROStatus[] = ['QUEUE', 'APPROVED', 'PICKING', 'PICK_VERIFIED', 'DNPB_PROCESS'];
+    const SHIPPING_STATUSES: ROStatus[] = ['READY_TO_SHIP', 'IN_DELIVERY', 'ARRIVED'];
     
-    const matchesSearch = searchQuery === '' || 
-      ro.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ro.store.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+    return roData.filter(ro => {
+      let matchesStatus = false;
+      if (filterStatus === 'ALL') matchesStatus = true;
+      else if (filterStatus === 'ONGOING') matchesStatus = ONGOING_STATUSES.includes(ro.currentStatus);
+      else if (filterStatus === 'SHIPPING') matchesStatus = SHIPPING_STATUSES.includes(ro.currentStatus);
+      else if (filterStatus === 'COMPLETE') matchesStatus = ro.currentStatus === 'COMPLETED';
+      
+      const matchesSearch = searchQuery === '' || 
+        ro.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ro.store.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+  }, [roData, filterStatus, searchQuery]);
 
   const getStatusColor = (status: ROStatus) => {
     switch (status) {
@@ -121,11 +123,11 @@ export default function ROProcess() {
     }
   };
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setIsLoading(true);
     await fetchROData();
     setIsLoading(false);
-  };
+  }, []);
 
   const renderROList = () => (
     <div className="space-y-3">
@@ -420,19 +422,24 @@ export default function ROProcess() {
     );
   };
 
-  const getArticleValues = (article: ROArticle) => {
+  const getArticleValues = useCallback((article: ROArticle) => {
     const edited = editedArticles[article.kodeArtikel];
     return {
       ddd: edited?.ddd ?? article.dddBoxes,
       ljbb: edited?.ljbb ?? article.ljbbBoxes,
     };
-  };
+  }, [editedArticles]);
 
-  const updateArticleQty = (articleCode: string, field: 'ddd' | 'ljbb', delta: number) => {
-    const article = selectedRO?.articles.find(a => a.kodeArtikel === articleCode);
+  const updateArticleQty = useCallback((articleCode: string, field: 'ddd' | 'ljbb', delta: number) => {
+    if (!selectedRO) return;
+    const article = selectedRO.articles.find(a => a.kodeArtikel === articleCode);
     if (!article) return;
     
-    const current = getArticleValues(article);
+    const edited = editedArticles[article.kodeArtikel];
+    const current = {
+      ddd: edited?.ddd ?? article.dddBoxes,
+      ljbb: edited?.ljbb ?? article.ljbbBoxes,
+    };
     const newValue = Math.max(0, current[field] + delta);
     
     setEditedArticles(prev => ({
@@ -442,7 +449,7 @@ export default function ROProcess() {
         [field]: newValue,
       }
     }));
-  };
+  }, [selectedRO, editedArticles]);
 
   const saveArticleChanges = async () => {
     if (!selectedRO || Object.keys(editedArticles).length === 0) return;

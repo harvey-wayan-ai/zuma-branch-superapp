@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Minus, Trash2, Package, Store, Send, Search, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -169,14 +169,14 @@ export default function RequestForm() {
     }
   };
 
-  // Filter articles based on search and gender, and exclude already added
-  const filteredArticles = availableArticles.filter(article => {
-    // Exclude already added articles
-    const notAdded = !articles.some(a => a.code === article.code);
-    return notAdded;
-  });
+  const filteredArticles = useMemo(() => {
+    return availableArticles.filter(article => {
+      const notAdded = !articles.some(a => a.code === article.code);
+      return notAdded;
+    });
+  }, [availableArticles, articles]);
 
-  const addArticle = (article: AvailableArticle) => {
+  const addArticle = useCallback((article: AvailableArticle) => {
     const dddStock = article.warehouse_stock.ddd_available || 0;
     const ljbbStock = article.warehouse_stock.ljbb_available || 0;
     
@@ -190,16 +190,16 @@ export default function RequestForm() {
       boxes_ubb: 0,
       warehouse_stock: article.warehouse_stock,
     };
-    setArticles([...articles, newItem]);
+    setArticles(prev => [...prev, newItem]);
     setSearchQuery('');
-  };
+  }, []);
 
-  const removeArticle = (id: string) => {
-    setArticles(articles.filter((item) => item.id !== id));
-  };
+  const removeArticle = useCallback((id: string) => {
+    setArticles(prev => prev.filter((item) => item.id !== id));
+  }, []);
 
-  const updateWarehouseQty = (id: string, warehouse: 'ddd' | 'ljbb' | 'mbb' | 'ubb', delta: number) => {
-    setArticles(articles.map((item) => {
+  const updateWarehouseQty = useCallback((id: string, warehouse: 'ddd' | 'ljbb' | 'mbb' | 'ubb', delta: number) => {
+    setArticles(prev => prev.map((item) => {
       if (item.id !== id) return item;
       const key = `boxes_${warehouse}` as keyof ArticleItem;
       const stockKey = `${warehouse}_available` as keyof typeof item.warehouse_stock;
@@ -208,11 +208,13 @@ export default function RequestForm() {
       const newVal = Math.max(0, Math.min(current + delta, max));
       return { ...item, [key]: newVal };
     }));
-  };
+  }, []);
 
-  const totalBoxes = articles.reduce((sum, item) => 
-    sum + item.boxes_ddd + item.boxes_ljbb + item.boxes_mbb + item.boxes_ubb, 0);
-  const totalPairs = totalBoxes * 12;
+  const { totalBoxes, totalPairs } = useMemo(() => {
+    const boxes = articles.reduce((sum, item) => 
+      sum + item.boxes_ddd + item.boxes_ljbb + item.boxes_mbb + item.boxes_ubb, 0);
+    return { totalBoxes: boxes, totalPairs: boxes * 12 };
+  }, [articles]);
 
   // Get stock status color
   const getStockStatusColor = (requested: number, available: number) => {
