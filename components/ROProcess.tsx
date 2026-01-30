@@ -26,6 +26,7 @@ interface ROItem {
   store: string;
   createdAt: string;
   currentStatus: ROStatus;
+  dnpbNumber: string | null;
   totalBoxes: number;
   totalArticles: number;
   dddBoxes: number;
@@ -54,10 +55,20 @@ export default function ROProcess() {
   const [isLoading, setIsLoading] = useState(false);
   const [roData, setRoData] = useState<ROItem[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dnpbInput, setDnpbInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchROData();
   }, []);
+
+  useEffect(() => {
+    if (selectedRO?.dnpbNumber) {
+      setDnpbInput(selectedRO.dnpbNumber);
+    } else {
+      setDnpbInput('');
+    }
+  }, [selectedRO?.id]);
 
   const fetchROData = async () => {
     setIsLoadingData(true);
@@ -74,9 +85,13 @@ export default function ROProcess() {
     }
   };
 
-  const filteredROList = filterStatus === 'ALL' 
-    ? roData 
-    : roData.filter(ro => ro.currentStatus === filterStatus);
+  const filteredROList = roData.filter(ro => {
+    const matchesStatus = filterStatus === 'ALL' || ro.currentStatus === filterStatus;
+    const matchesSearch = searchQuery === '' || 
+      ro.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ro.store.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusColor = (status: ROStatus) => {
     switch (status) {
@@ -113,6 +128,17 @@ export default function ROProcess() {
         >
           <RefreshCw className="w-4 h-4 text-gray-400" />
         </button>
+      </div>
+
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search RO ID or Store..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 pl-10 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
+        />
+        <Package className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
       </div>
 
       {/* Filter */}
@@ -229,7 +255,24 @@ export default function ROProcess() {
           </div>
         </div>
 
-        {/* Process Timeline */}
+        {selectedRO.currentStatus === 'DNPB_PROCESS' && (
+          <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
+            <label className="block text-sm font-medium text-yellow-800 mb-2">
+              📝 DNPB Number (Required)
+            </label>
+            <input
+              type="text"
+              placeholder="DNPB/DDD/WHS/2026/I/001"
+              value={dnpbInput}
+              onChange={(e) => setDnpbInput(e.target.value)}
+              className="w-full px-4 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+            />
+            {selectedRO.dnpbNumber && (
+              <p className="mt-2 text-xs text-yellow-700">Current: {selectedRO.dnpbNumber}</p>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <h3 className="font-semibold text-gray-900 mb-4">Order Progress</h3>
           
@@ -303,6 +346,33 @@ export default function ROProcess() {
                 return;
               }
               
+              if (selectedRO.currentStatus === 'DNPB_PROCESS') {
+                const dnpbToSave = dnpbInput || selectedRO.dnpbNumber;
+                if (!dnpbToSave) {
+                  alert('DNPB Number is required before proceeding');
+                  return;
+                }
+                
+                setIsLoading(true);
+                try {
+                  const dnpbRes = await fetch('/api/ro/dnpb', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roId: selectedRO.id, dnpbNumber: dnpbToSave })
+                  });
+                  const dnpbResult = await dnpbRes.json();
+                  if (!dnpbResult.success) {
+                    alert(`DNPB Error: ${dnpbResult.error}`);
+                    setIsLoading(false);
+                    return;
+                  }
+                } catch (error) {
+                  alert('Failed to save DNPB number');
+                  setIsLoading(false);
+                  return;
+                }
+              }
+              
               const nextStatus = statusFlow[currentIndex + 1];
               setIsLoading(true);
               
@@ -316,7 +386,8 @@ export default function ROProcess() {
                 const result = await res.json();
                 
                 if (result.success) {
-                  setSelectedRO({ ...selectedRO, currentStatus: nextStatus.id });
+                  setSelectedRO({ ...selectedRO, currentStatus: nextStatus.id, dnpbNumber: dnpbInput || selectedRO.dnpbNumber });
+                  setDnpbInput('');
                   fetchROData();
                 } else {
                   alert(`Error: ${result.error}`);
