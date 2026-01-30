@@ -9,7 +9,12 @@ export async function GET(request: Request) {
     let stockQuery = supabase.from('master_mutasi_whs').select('*');
 
     if (query) {
-      stockQuery = stockQuery.or(`Kode Artikel.ilike.%${query}%,Nama Artikel.ilike.%${query}%`);
+      const sanitized = query
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_')
+        .replace(/'/g, "''");
+      stockQuery = stockQuery.or(`Kode Artikel.ilike.%${sanitized}%,Nama Artikel.ilike.%${sanitized}%`);
     }
 
     const { data: articles, error: articlesError } = await stockQuery
