@@ -914,5 +914,57 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 
 ### Other Pending Features
 - ⬜ Authentication - Login for Area Supervisors
-- ⬜ DNPB number input field (in RO Process)
 - ⬜ DNPB matching with transaction tables
+
+---
+
+## 🔧 NEXT IMPROVEMENTS - RO Process Tab
+
+### 1. DNPB Number Input Field
+
+**Location:** Layer 2 (RO Detail) - shown only when `status = DNPB_PROCESS`
+
+**UI Layout:**
+```
+┌─────────────────────────────────────┐
+│ RO-2601-0003         [DNPB_PROCESS]│
+│ Zuma Icon Gresik                    │
+│ 5 articles • 10 boxes               │
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│ 📝 DNPB Number (Required)           │
+│ ┌─────────────────────────────────┐ │
+│ │ DNPB/DDD/WHS/2026/I/001        │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+
+[Timeline...]
+
+[View Articles]  [Next Stage →]
+                 ↑ blocked if DNPB empty
+```
+
+**Logic:**
+1. Show input field ONLY when `status = DNPB_PROCESS`
+2. Block "Next Stage" button if DNPB field is empty
+3. On submit: Update `dnpb_number` column for ALL rows with same `ro_id`
+4. One input = writes to 10-20 article rows (batch update)
+5. Then advance status to `READY_TO_SHIP`
+
+**Database:**
+- Column: `ro_process.dnpb_number` (VARCHAR 100)
+- Format: `DNPB/DDD/WHS/2026/I/001`
+
+**Performance Note:**
+- 1 RO ID = 10-20 articles
+- Each article = 5-10 boxes
+- Single API call updates all rows by ro_id
+
+### 2. Edit Article Quantities
+- ⬜ Allow editing DDD/LJBB boxes in Layer 3
+- ⬜ Save changes to Supabase
+
+### 3. Search RO by ID
+- ⬜ Add search input in Layer 1 (RO List)
+- ⬜ Filter by RO ID pattern
