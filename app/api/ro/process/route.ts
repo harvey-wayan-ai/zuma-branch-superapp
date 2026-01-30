@@ -43,6 +43,7 @@ export async function GET(request: Request) {
       ro.articles.push({
         kodeArtikel: row.article_code,
         namaArtikel: row.article_name || row.article_code,
+        boxesRequested: row.boxes_requested || 0,
         dddBoxes: row.boxes_allocated_ddd || 0,
         ljbbBoxes: row.boxes_allocated_ljbb || 0,
       });

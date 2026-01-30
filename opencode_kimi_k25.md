@@ -818,3 +818,40 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 2. ⬜ Update `statusFlow` array in ROProcess.tsx - Add DNPB_PROCESS
 3. ⬜ Modify button onClick - Call API, handle loading, refresh data
 4. ⬜ Test status progression end-to-end
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Layer 3 - View Articles)
+
+### ✅ LAYER 3 IMPLEMENTED - View Articles Table
+
+**Feature:** When user clicks "View Articles" button in RO Detail (Layer 2), shows compact article breakdown table.
+
+**Table Columns:**
+| Article | Box | DDD | LJBB |
+|---------|-----|-----|------|
+| Code + Name | boxes_requested | boxes_allocated_ddd | boxes_allocated_ljbb |
+
+**Navigation Flow:**
+```
+Layer 1: RO List → Click RO card
+Layer 2: RO Detail + Timeline → Click "View Articles"
+Layer 3: Article Breakdown Table → Click "Back to RO Detail"
+```
+
+**Changes Made:**
+
+1. **API Updated** (`/api/ro/process`)
+   - Added `boxesRequested` to articles array
+
+2. **ROProcess.tsx Updated**
+   - Added `viewArticles` state
+   - Added `renderArticlesView()` function
+   - Updated "View Articles" button to show Layer 3
+   - Table shows: Article (code+name), Box (requested), DDD, LJBB
+   - Footer row with totals
+   - Color-coded: DDD=blue, LJBB=purple
+
+**Files Modified:**
+- `app/api/ro/process/route.ts`
+- `components/ROProcess.tsx`

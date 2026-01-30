@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 interface ROArticle {
   kodeArtikel: string;
   namaArtikel: string;
+  boxesRequested: number;
   dddBoxes: number;
   ljbbBoxes: number;
 }
@@ -47,6 +48,7 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
 
 export default function ROProcess() {
   const [selectedRO, setSelectedRO] = useState<ROItem | null>(null);
+  const [viewArticles, setViewArticles] = useState(false);
   const [filterStatus, setFilterStatus] = useState<ROStatus | 'ALL'>('ALL');
   const [isLoading, setIsLoading] = useState(false);
   const [roData, setRoData] = useState<ROItem[]>([]);
@@ -200,7 +202,7 @@ export default function ROProcess() {
       <div className="space-y-4">
         {/* Back Button */}
         <button
-          onClick={() => setSelectedRO(null)}
+          onClick={() => { setSelectedRO(null); setViewArticles(false); }}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronRight className="w-4 h-4 rotate-180" />
@@ -287,10 +289,10 @@ export default function ROProcess() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <button 
-            onClick={() => alert('View Articles - Layer 3 coming soon!')}
+            onClick={() => setViewArticles(true)}
             className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
           >
-            <RefreshCw className="w-4 h-4" /> View Articles
+            <Package className="w-4 h-4" /> View Articles
           </button>
           <button 
             onClick={() => {
@@ -311,9 +313,79 @@ export default function ROProcess() {
     );
   };
 
+  const renderArticlesView = () => {
+    if (!selectedRO) return null;
+
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setViewArticles(false)}
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+        >
+          <ChevronRight className="w-4 h-4 rotate-180" />
+          Back to RO Detail
+        </button>
+
+        <div className="bg-[#0D3B2E] rounded-xl p-4 text-white">
+          <p className="text-xs opacity-80 font-mono">{selectedRO.id}</p>
+          <p className="font-semibold">{selectedRO.store}</p>
+          <p className="text-sm opacity-80 mt-1">{selectedRO.totalArticles} articles • {selectedRO.totalBoxes} boxes</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <h3 className="font-semibold text-gray-900 p-4 border-b border-gray-100">
+            Article Breakdown
+          </h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-gray-500 border-b border-gray-100 bg-gray-50">
+                  <th className="py-3 px-3 font-medium">Article</th>
+                  <th className="py-3 px-2 font-medium text-center">Box</th>
+                  <th className="py-3 px-2 font-medium text-center text-blue-600">DDD</th>
+                  <th className="py-3 px-2 font-medium text-center text-purple-600">LJBB</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedRO.articles.map((article, idx) => (
+                  <tr key={idx} className="border-b border-gray-50 last:border-0">
+                    <td className="py-3 px-3">
+                      <p className="font-mono text-xs text-gray-500">{article.kodeArtikel}</p>
+                      <p className="text-gray-900 text-xs truncate max-w-[150px]">{article.namaArtikel}</p>
+                    </td>
+                    <td className="py-3 px-2 text-center font-medium text-gray-900">{article.boxesRequested}</td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="inline-block min-w-[32px] px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                        {article.dddBoxes}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="inline-block min-w-[32px] px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium">
+                        {article.ljbbBoxes}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 font-medium">
+                  <td className="py-3 px-3 text-gray-700">Total</td>
+                  <td className="py-3 px-2 text-center text-gray-900">{selectedRO.totalBoxes}</td>
+                  <td className="py-3 px-2 text-center text-blue-700">{selectedRO.dddBoxes}</td>
+                  <td className="py-3 px-2 text-center text-purple-700">{selectedRO.ljbbBoxes}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-      {selectedRO ? renderRODetail() : renderROList()}
+      {viewArticles ? renderArticlesView() : (selectedRO ? renderRODetail() : renderROList())}
     </div>
   );
 }
