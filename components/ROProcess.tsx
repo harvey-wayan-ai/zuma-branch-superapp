@@ -113,10 +113,10 @@ export default function ROProcess() {
     }
   };
 
-  const refreshData = () => {
+  const refreshData = async () => {
     setIsLoading(true);
-    fetchROData();
-    setTimeout(() => setIsLoading(false), 1000);
+    await fetchROData();
+    setIsLoading(false);
   };
 
   const renderROList = () => (
