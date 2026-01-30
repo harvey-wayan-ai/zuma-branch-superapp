@@ -459,6 +459,7 @@ RO Process tab shows submitted ROs
 1. `"Store Name"` = selected store
 2. `"Recommendation (box)"` > 0 (only articles with recommended quantity)
 3. Ordered by `"Tier"` ascending (priority: lower tier = higher priority)
+4. **Include even if stock = 0** (user needs to see what's recommended but unavailable)
 
 **Stock data joined from master_mutasi_whs:**
 - `"Stock Akhir DDD"` → ddd_available
@@ -466,6 +467,11 @@ RO Process tab shows submitted ROs
 - `"Stock Akhir MBB"` → mbb_available
 - `"Stock Akhir UBB"` → ubb_available
 - `"Stock Akhir Total"` → total_available
+
+**Submit validation:**
+- If ANY article has stock = 0 but qty requested > 0 → DISABLE submit button
+- Show warning: "Cannot submit - some articles have 0 stock"
+- User must remove 0-stock items or set their qty to 0
 
 ### +Add Button Logic
 
@@ -542,6 +548,8 @@ Result: Can only fulfill 8 of 10 requested
 - ⬜ Allow manual override OR auto-allocate (DDD→LJBB priority)
 - ⬜ Validate: requested ≤ available per warehouse
 - ⬜ Show warning if DDD+LJBB insufficient
+- ⬜ Disable submit if any article has qty > 0 but stock = 0
+- ⬜ Show red badge/warning for 0-stock items
 
 **Submit API:**
 - ⬜ Accept boxes_ddd, boxes_ljbb, boxes_mbb, boxes_ubb
