@@ -395,9 +395,33 @@ master_mutasi_whs (2727 rows)
 - Zuma Sunrise Mall
 - Zuma Tunjungan Plaza
 
+### ✅ RO PROCESS PAGE - CONNECTED TO DATABASE
+
+**Created `/api/ro/process` endpoint:**
+- Fetches from `ro_process` table
+- Groups results by `ro_id` for proper aggregation
+- Returns: id, store, createdAt, currentStatus, totalBoxes, totalArticles, dddBoxes, ljbbBoxes, articles[]
+
+**Updated `ROProcess.tsx`:**
+- Removed hardcoded `realROData` array
+- Added `roData` state fetched from API on mount
+- Added loading and empty states
+- Refresh button now fetches fresh data
+- **All UI/layout unchanged**
+
+**Local test:** ✅ Returns `{"success":true,"data":[]}` (empty as expected)
+
+### ⚠️ VERCEL DEPLOYMENT ISSUE
+
+Vercel returning 404 - needs environment variables set in dashboard:
+1. `NEXT_PUBLIC_SUPABASE_URL`
+2. `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. `SUPABASE_SERVICE_ROLE_KEY`
+
+Go to: https://vercel.com/harvey-wayans-projects/zuma-ro-pwa/settings/environment-variables
+
 ### 📋 REMAINING TASKS
 
 1. ⬜ Fix Submit API - remove `article_name` and `notes` (not in ro_process table)
-2. ⬜ Create `/api/ro/process` GET endpoint for RO Process page
-3. ⬜ Update ROProcess.tsx to fetch from database instead of hardcoded data
-4. ⬜ Fix Articles API duplicates (add DISTINCT by Kode Artikel)
+2. ⬜ Fix Articles API duplicates (add DISTINCT by Kode Artikel)
+3. ⬜ Set Vercel environment variables for production deployment
