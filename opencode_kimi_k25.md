@@ -775,3 +775,46 @@ Stock Akhir = Transaksi IN - Transaksi OUT - ro_ongoing
 **Files Modified:**
 - `app/api/ro/dashboard/route.ts` (NEW)
 - `components/ROPage.tsx` (UPDATED)
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Next Stage Button Fix - Planning)
+
+### 🔴 ISSUE: Next Stage Button Not Working
+
+**Problem:** Button only updates local React state, no API call to persist to database.
+
+**Current Code (ROProcess.tsx lines 296-303):**
+- Finds current status index
+- Gets next status from array
+- Updates local state only (`setSelectedRO`)
+- Shows alert
+- **NO API CALL** → Changes lost on refresh
+
+### ✅ UPDATED STATUS FLOW (9 Stages)
+
+**Previous:** 8 stages
+**New:** 9 stages (added DNPB_PROCESS)
+
+```
+QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_SHIP → IN_DELIVERY → ARRIVED → COMPLETED
+```
+
+| # | Status | Label | Description |
+|---|--------|-------|-------------|
+| 1 | QUEUE | Queue | Awaiting approval |
+| 2 | APPROVED | Approved | WH Supervisor approved |
+| 3 | PICKING | Picking | Being picked from warehouse |
+| 4 | PICK_VERIFIED | Verified | Pick quantities verified |
+| 5 | **DNPB_PROCESS** | **DNPB** | **Delivery note processing (NEW)** |
+| 6 | READY_TO_SHIP | Ready | Ready for dispatch |
+| 7 | IN_DELIVERY | Delivery | Out for delivery |
+| 8 | ARRIVED | Arrived | Received at store |
+| 9 | COMPLETED | Completed | Order closed |
+
+### 📋 TODO: Fix Next Stage Button
+
+1. ⬜ Create `/api/ro/status` endpoint (PATCH) - Update status in Supabase
+2. ⬜ Update `statusFlow` array in ROProcess.tsx - Add DNPB_PROCESS
+3. ⬜ Modify button onClick - Call API, handle loading, refresh data
+4. ⬜ Test status progression end-to-end

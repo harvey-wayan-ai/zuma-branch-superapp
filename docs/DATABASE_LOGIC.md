@@ -44,7 +44,7 @@ Stores all RO (Replenishment Order) allocations.
 
 3. **Status Flow:**
    ```
-   QUEUE → APPROVED → PICKING → PICK_VERIFIED → READY_TO_SHIP → IN_DELIVERY → ARRIVED → COMPLETED
+   QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_SHIP → IN_DELIVERY → ARRIVED → COMPLETED
      │
      └─► CANCELLED (from any status except COMPLETED)
    ```
