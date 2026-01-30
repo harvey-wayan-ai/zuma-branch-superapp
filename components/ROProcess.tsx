@@ -45,77 +45,35 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
   { id: 'COMPLETED', label: 'Completed', icon: CheckCircle2, description: 'Order closed' },
 ];
 
-// Real data from Google Sheets
-const realROData: ROItem[] = [
-  { 
-    id: 'RO-2511-0007',
-    store: 'Zuma Matos',
-    createdAt: '26/11/2025',
-    currentStatus: 'DELIVERY',
-    totalBoxes: 16,
-    totalArticles: 11,
-    dddBoxes: 12,
-    ljbbBoxes: 4,
-    articles: [
-      { kodeArtikel: 'M1CAV201', namaArtikel: 'MEN CLASSIC 1, JET BLACK', dddBoxes: 6, ljbbBoxes: 0 },
-      { kodeArtikel: 'M1DLV101', namaArtikel: 'MEN DALLAS 1, JET BLACK', dddBoxes: 1, ljbbBoxes: 0 },
-      { kodeArtikel: 'M1SLV114', namaArtikel: 'MEN SLIDE MAX 14, BLACK', dddBoxes: 1, ljbbBoxes: 0 },
-    ]
-  },
-  {
-    id: 'RO-2512-0008',
-    store: 'Zuma Sunrise Mall',
-    createdAt: '02/12/2025',
-    currentStatus: 'DELIVERY',
-    totalBoxes: 9,
-    totalArticles: 8,
-    dddBoxes: 4,
-    ljbbBoxes: 5,
-    articles: []
-  },
-  {
-    id: 'RO-2512-0009',
-    store: 'Zuma Royal Plaza',
-    createdAt: '02/12/2025',
-    currentStatus: 'DNPB PROCESS',
-    totalBoxes: 11,
-    totalArticles: 8,
-    dddBoxes: 11,
-    ljbbBoxes: 0,
-    articles: []
-  },
-  {
-    id: 'RO-2512-0010',
-    store: 'Zuma Royal Plaza',
-    createdAt: '02/12/2025',
-    currentStatus: 'COMPLETED',
-    totalBoxes: 32,
-    totalArticles: 1,
-    dddBoxes: 32,
-    ljbbBoxes: 0,
-    articles: []
-  },
-  {
-    id: 'RO-2512-0011',
-    store: 'Zuma Sunrise Mall',
-    createdAt: '02/12/2025',
-    currentStatus: 'DNPB PROCESS',
-    totalBoxes: 85,
-    totalArticles: 1,
-    dddBoxes: 0,
-    ljbbBoxes: 85,
-    articles: []
-  },
-];
-
 export default function ROProcess() {
   const [selectedRO, setSelectedRO] = useState<ROItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<ROStatus | 'ALL'>('ALL');
   const [isLoading, setIsLoading] = useState(false);
+  const [roData, setRoData] = useState<ROItem[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  useEffect(() => {
+    fetchROData();
+  }, []);
+
+  const fetchROData = async () => {
+    setIsLoadingData(true);
+    try {
+      const response = await fetch('/api/ro/process');
+      const result = await response.json();
+      if (result.success) {
+        setRoData(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching RO data:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const filteredROList = filterStatus === 'ALL' 
-    ? realROData 
-    : realROData.filter(ro => ro.currentStatus === filterStatus);
+    ? roData 
+    : roData.filter(ro => ro.currentStatus === filterStatus);
 
   const getStatusColor = (status: ROStatus) => {
     switch (status) {
@@ -134,6 +92,7 @@ export default function ROProcess() {
 
   const refreshData = () => {
     setIsLoading(true);
+    fetchROData();
     setTimeout(() => setIsLoading(false), 1000);
   };
 
@@ -183,8 +142,17 @@ export default function ROProcess() {
       </div>
 
       {/* RO Cards */}
-      <div className="space-y-3">
-        {filteredROList.map((ro) => (
+      {isLoadingData ? (
+        <div className="text-center py-8 text-gray-500">Loading...</div>
+      ) : filteredROList.length === 0 ? (
+        <div className="text-center py-8">
+          <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No RO requests found</p>
+          <p className="text-gray-400 text-sm">Submit an RO from the Request tab</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredROList.map((ro) => (
           <button
             key={ro.id}
             onClick={() => setSelectedRO(ro)}
@@ -218,7 +186,8 @@ export default function ROProcess() {
             </div>
           </button>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 
