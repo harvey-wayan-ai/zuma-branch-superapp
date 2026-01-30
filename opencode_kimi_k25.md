@@ -362,3 +362,42 @@ master_mutasi_whs (2727 rows)
 
 - Articles API returns duplicates (same article 3x for DDD/LJBB/MBB entities)
 - Need to add DISTINCT or aggregate by "Kode Artikel"
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Part 2)
+
+### ✅ STORE DROPDOWN - DYNAMIC FROM DATABASE
+
+**Changed from hardcoded to database-driven:**
+
+**1. Updated `/api/stores` endpoint:**
+- Fetches unique store names from `ro_recommendations` table
+- Filters out header rows and empty values
+- Returns: `{ regular: [...stores], special: ['Other Need', 'Wholesale', 'Consignment'] }`
+
+**2. Updated `RequestForm.tsx`:**
+- Added `stores` state fetched from API on mount
+- Added `isLoadingStores` loading state
+- Removed hardcoded stores array
+- Kept existing dropdown UI layout (Regular Stores + Special Options sections)
+
+**Stores now fetched from DB:**
+- Zuma City Of Tomorrow Mall
+- Zuma Galaxy Mall
+- Zuma Icon Gresik
+- Zuma Lippo Batu
+- Zuma Lippo Sidoarjo
+- Zuma Mall Olympic Garden
+- Zuma Matos
+- ZUMA PTC
+- Zuma Royal Plaza
+- Zuma Sunrise Mall
+- Zuma Tunjungan Plaza
+
+### 📋 REMAINING TASKS
+
+1. ⬜ Fix Submit API - remove `article_name` and `notes` (not in ro_process table)
+2. ⬜ Create `/api/ro/process` GET endpoint for RO Process page
+3. ⬜ Update ROProcess.tsx to fetch from database instead of hardcoded data
+4. ⬜ Fix Articles API duplicates (add DISTINCT by Kode Artikel)

@@ -1,35 +1,31 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-// Static store list for Jatim Area (matches current RequestForm.tsx)
-// In production, this should come from Supabase stores table
-const REGULAR_STORES = [
-  'Zuma Tunjungan Plaza',
-  'Zuma Royal Plaza',
-  'Zuma Bintaro Xchange',
-  'Zuma Galaxy Mall',
-  'Zuma Ciputra World',
-];
-
-const SPECIAL_STORES = [
-  'Other Need',
-  'Wholesale',
-  'Consignment',
-];
+const SPECIAL_STORES = ['Other Need', 'Wholesale', 'Consignment'];
 
 export async function GET() {
   try {
+    const { data, error } = await supabase
+      .from('ro_recommendations')
+      .select('"Store Name"')
+      .neq('Store Name', 'Store Name')  // exclude header row
+      .neq('Store Name', '')  // exclude empty
+      .order('Store Name');
+
+    if (error) throw error;
+
+    // Get unique store names
+    const uniqueStores = [...new Set(data?.map((r: any) => r['Store Name']).filter(Boolean))];
+
     return NextResponse.json({
       success: true,
       data: {
-        regular: REGULAR_STORES,
+        regular: uniqueStores,
         special: SPECIAL_STORES,
       },
     });
   } catch (error: any) {
     console.error('Error in stores API:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

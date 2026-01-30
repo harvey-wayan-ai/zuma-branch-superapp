@@ -51,32 +51,38 @@ export default function RequestForm() {
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   
-  // Loading states
   const [isLoadingArticles, setIsLoadingArticles] = useState(false);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingStores, setIsLoadingStores] = useState(true);
   
-  // Data states
   const [availableArticles, setAvailableArticles] = useState<AvailableArticle[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [stores, setStores] = useState<string[]>([]);
 
-  // Store list for Jatim Area Supervisor
-  const stores = [
-    'Zuma Tunjungan Plaza',
-    'Zuma Royal Plaza',
-    'Zuma Bintaro Xchange',
-    'Zuma Galaxy Mall',
-    'Zuma Ciputra World',
-  ];
-
-  // Special options for warehouse supervisor access
   const specialStores = [
     'Other Need',
     'Wholesale',
     'Consignment',
   ];
 
-  // Fetch articles from API when modal opens
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const response = await fetch('/api/stores');
+        const result = await response.json();
+        if (result.success) {
+          setStores(result.data.regular);
+        }
+      } catch (error) {
+        console.error('Error fetching stores:', error);
+      } finally {
+        setIsLoadingStores(false);
+      }
+    };
+    fetchStores();
+  }, []);
+
   useEffect(() => {
     if (showArticleSelector) {
       fetchArticles();
