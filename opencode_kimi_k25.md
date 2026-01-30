@@ -855,3 +855,31 @@ Layer 3: Article Breakdown Table → Click "Back to RO Detail"
 **Files Modified:**
 - `app/api/ro/process/route.ts`
 - `components/ROProcess.tsx`
+
+### ✅ LAYER 3 ENHANCEMENT - Status Badge in Header
+
+Added status badge to Layer 3 header card (top-right corner).
+
+```
+┌─────────────────────────────────────┐
+│ RO-2601-0001              [QUEUE]  │
+│ Zuma Matos                          │
+│ 3 articles • 5 boxes                │
+└─────────────────────────────────────┘
+```
+
+---
+
+## 📋 REMAINING TODO - RO Process Tab
+
+### Next Stage Button (NOT WORKING)
+1. ⬜ Create `/api/ro/status` endpoint (PATCH) - Update status in Supabase
+2. ⬜ Update `statusFlow` array in ROProcess.tsx - Add DNPB_PROCESS (9 stages)
+3. ⬜ Modify button onClick - Call API, handle loading, refresh data
+4. ⬜ Test status progression end-to-end
+
+### Other Pending Features
+- ⬜ SKU Page - Product catalog with search
+- ⬜ Authentication - Login for Area Supervisors
+- ⬜ DNPB number input field (in RO Process)
+- ⬜ DNPB matching with transaction tables
