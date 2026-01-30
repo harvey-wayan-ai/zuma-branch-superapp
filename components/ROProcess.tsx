@@ -327,9 +327,16 @@ export default function ROProcess() {
         </button>
 
         <div className="bg-[#0D3B2E] rounded-xl p-4 text-white">
-          <p className="text-xs opacity-80 font-mono">{selectedRO.id}</p>
-          <p className="font-semibold">{selectedRO.store}</p>
-          <p className="text-sm opacity-80 mt-1">{selectedRO.totalArticles} articles • {selectedRO.totalBoxes} boxes</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs opacity-80 font-mono">{selectedRO.id}</p>
+              <p className="font-semibold">{selectedRO.store}</p>
+            </div>
+            <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-medium">
+              {selectedRO.currentStatus}
+            </span>
+          </div>
+          <p className="text-sm opacity-80 mt-2">{selectedRO.totalArticles} articles • {selectedRO.totalBoxes} boxes</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
