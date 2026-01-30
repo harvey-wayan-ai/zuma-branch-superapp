@@ -903,8 +903,16 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 
 ## 📋 REMAINING TODO
 
+### WH Page (formerly SKU Page)
+- ⬜ WHS Dashboard - source: `master_mutasi_whs` VIEW
+- ⬜ Design TBD - figuring out layout, metrics, what to sum/display
+- **Possible metrics:**
+  - Stock per article (DDD / LJBB / MBB / Total)
+  - Transaksi IN / OUT
+  - ro_ongoing allocations
+  - Stock Akhir per entity
+
 ### Other Pending Features
-- ⬜ SKU Page - Product catalog with search
 - ⬜ Authentication - Login for Area Supervisors
 - ⬜ DNPB number input field (in RO Process)
 - ⬜ DNPB matching with transaction tables
