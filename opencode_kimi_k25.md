@@ -424,7 +424,52 @@ Added aggregation by "Kode Artikel" to dedupe
 ### ✅ STORES DROPDOWN FIXED
 Added limit(5000) to get all distinct stores
 
+---
+
+## DATA FLOW ARCHITECTURE
+
+### Request Form → ro_process (SUBMIT)
+
+```
+User fills Request Form
+    ↓
+AUTO button → /api/ro/recommendations → ro_recommendations + master_mutasi_whs
+    OR
++Add button → /api/articles → master_mutasi_whs
+    ↓
+User clicks Submit
+    ↓
+/api/ro/submit → INSERT into ro_process
+    ↓
+RO Process tab shows submitted ROs
+```
+
+### Data Sources
+
+| Action | API | Source Table | Data |
+|--------|-----|--------------|------|
+| AUTO button | /api/ro/recommendations | ro_recommendations + master_mutasi_whs | Store-specific recommendations + stock |
+| +Add button | /api/articles | master_mutasi_whs | Article catalog + stock |
+| Submit | /api/ro/submit | → ro_process | Creates RO with ro_id |
+| RO Process | /api/ro/process | ro_process | Lists submitted ROs |
+
+### ro_process Table Columns
+
+| Column | Source | Description |
+|--------|--------|-------------|
+| ro_id | Generated (RO-YYMM-XXXX) | Unique per submission |
+| article_code | From selected article | Article code |
+| article_name | From selected article | Article name |
+| boxes_requested | User input | Quantity requested |
+| boxes_allocated_ddd | WH sets later | Allocated from DDD |
+| boxes_allocated_ljbb | WH sets later | Allocated from LJBB |
+| status | 'QUEUE' initially | RO status |
+| store_name | From dropdown | Destination store |
+| notes | User input | Notes for entire RO |
+
 ### 📋 REMAINING TASKS
 
-1. ⬜ Test full RO submission flow end-to-end
-2. ⬜ Verify stores dropdown shows all 11 stores (may need RPC function)
+1. ✅ Stores dropdown - dynamic from ro_recommendations (11 stores)
+2. ✅ Submit API - generates ro_id, includes article_name & notes
+3. ⬜ Test full RO submission flow end-to-end
+4. ⬜ Verify RO Process page displays submitted ROs correctly
