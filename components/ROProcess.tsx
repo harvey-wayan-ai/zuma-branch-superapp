@@ -72,16 +72,19 @@ export default function ROProcess() {
     }
   }, [selectedRO?.id]);
 
-  const fetchROData = async () => {
+  const fetchROData = async (): Promise<ROItem[]> => {
     setIsLoadingData(true);
     try {
       const response = await fetch('/api/ro/process');
       const result = await response.json();
       if (result.success) {
         setRoData(result.data);
+        return result.data;
       }
+      return [];
     } catch (error) {
       console.error('Error fetching RO data:', error);
+      return [];
     } finally {
       setIsLoadingData(false);
     }
@@ -444,6 +447,7 @@ export default function ROProcess() {
     
     setIsSaving(true);
     try {
+      let hasError = false;
       for (const [articleCode, values] of Object.entries(editedArticles)) {
         const res = await fetch('/api/ro/articles', {
           method: 'PATCH',
@@ -458,10 +462,19 @@ export default function ROProcess() {
         const result = await res.json();
         if (!result.success) {
           alert(`Error updating ${articleCode}: ${result.error}`);
+          hasError = true;
         }
       }
+      
       setEditedArticles({});
-      fetchROData();
+      const freshData = await fetchROData();
+      
+      if (!hasError && freshData.length > 0) {
+        const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
+        if (updatedRO) {
+          setSelectedRO(updatedRO);
+        }
+      }
     } catch (error) {
       alert('Failed to save changes');
       console.error(error);
