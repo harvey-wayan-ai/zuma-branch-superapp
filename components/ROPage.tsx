@@ -92,9 +92,9 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/ro/dashboard');
       const json = await res.json();
-      if (json.success) {
-        setStats(json.data.stats);
-        setRoData(json.data.roList);
+      if (json.success && json.data) {
+        setStats(json.data.stats ?? { totalRO: 0, queued: 0, totalBoxes: 0, totalPairs: 0 });
+        setRoData(json.data.roList ?? []);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
