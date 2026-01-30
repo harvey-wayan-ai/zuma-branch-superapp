@@ -411,17 +411,20 @@ master_mutasi_whs (2727 rows)
 
 **Local test:** ✅ Returns `{"success":true,"data":[]}` (empty as expected)
 
-### ⚠️ VERCEL DEPLOYMENT ISSUE
+### ✅ VERCEL DEPLOYED
 
-Vercel returning 404 - needs environment variables set in dashboard:
-1. `NEXT_PUBLIC_SUPABASE_URL`
-2. `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. `SUPABASE_SERVICE_ROLE_KEY`
+Env vars set via CLI. Production live at https://zuma-ro-pwa.vercel.app
 
-Go to: https://vercel.com/harvey-wayans-projects/zuma-ro-pwa/settings/environment-variables
+### ✅ SUBMIT API FIXED
+Removed `article_name` and `notes` (columns don't exist in ro_process)
+
+### ✅ ARTICLES API FIXED  
+Added aggregation by "Kode Artikel" to dedupe
+
+### ✅ STORES DROPDOWN FIXED
+Added limit(5000) to get all distinct stores
 
 ### 📋 REMAINING TASKS
 
-1. ⬜ Fix Submit API - remove `article_name` and `notes` (not in ro_process table)
-2. ⬜ Fix Articles API duplicates (add DISTINCT by Kode Artikel)
-3. ⬜ Set Vercel environment variables for production deployment
+1. ⬜ Test full RO submission flow end-to-end
+2. ⬜ Verify stores dropdown shows all 11 stores (may need RPC function)
