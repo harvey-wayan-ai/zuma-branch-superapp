@@ -10,8 +10,22 @@ const VALID_STATUSES = [
   'READY_TO_SHIP',
   'IN_DELIVERY',
   'ARRIVED',
-  'COMPLETED'
+  'COMPLETED',
+  'CANCELLED'
 ];
+
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  'QUEUE': ['APPROVED', 'CANCELLED'],
+  'APPROVED': ['PICKING', 'CANCELLED'],
+  'PICKING': ['PICK_VERIFIED', 'CANCELLED'],
+  'PICK_VERIFIED': ['DNPB_PROCESS', 'CANCELLED'],
+  'DNPB_PROCESS': ['READY_TO_SHIP', 'CANCELLED'],
+  'READY_TO_SHIP': ['IN_DELIVERY', 'CANCELLED'],
+  'IN_DELIVERY': ['ARRIVED', 'CANCELLED'],
+  'ARRIVED': ['COMPLETED', 'CANCELLED'],
+  'COMPLETED': [],
+  'CANCELLED': [],
+};
 
 export async function PATCH(request: Request) {
   try {
@@ -27,6 +41,31 @@ export async function PATCH(request: Request) {
     if (!VALID_STATUSES.includes(status)) {
       return NextResponse.json(
         { success: false, error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const { data: currentData, error: fetchError } = await supabase
+      .from('ro_process')
+      .select('status')
+      .eq('ro_id', roId)
+      .limit(1);
+
+    if (fetchError) throw fetchError;
+
+    if (!currentData || currentData.length === 0) {
+      return NextResponse.json(
+        { success: false, error: `RO ${roId} not found` },
+        { status: 404 }
+      );
+    }
+
+    const currentStatus = currentData[0].status;
+    const allowedNextStatuses = VALID_TRANSITIONS[currentStatus] || [];
+    
+    if (!allowedNextStatuses.includes(status)) {
+      return NextResponse.json(
+        { success: false, error: `Cannot transition from ${currentStatus} to ${status}. Allowed: ${allowedNextStatuses.join(', ') || 'none'}` },
         { status: 400 }
       );
     }
