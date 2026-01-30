@@ -33,13 +33,14 @@ interface ROItem {
   articles: ROArticle[];
 }
 
-type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'COMPLETED' | 'DELIVERY' | 'DNPB PROCESS';
+type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'DNPB_PROCESS' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'COMPLETED';
 
 const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'QUEUE', label: 'Queue', icon: Clock, description: 'Awaiting approval' },
   { id: 'APPROVED', label: 'Approved', icon: CheckCircle2, description: 'WH Supervisor approved' },
   { id: 'PICKING', label: 'Picking', icon: Package, description: 'Being picked from warehouse' },
   { id: 'PICK_VERIFIED', label: 'Verified', icon: CheckCircle2, description: 'Pick quantities verified' },
+  { id: 'DNPB_PROCESS', label: 'DNPB', icon: Database, description: 'Delivery note processing' },
   { id: 'READY_TO_SHIP', label: 'Ready', icon: Package, description: 'Ready for dispatch' },
   { id: 'IN_DELIVERY', label: 'Delivery', icon: Truck, description: 'Out for delivery' },
   { id: 'ARRIVED', label: 'Arrived', icon: Home, description: 'Received at store' },
@@ -81,9 +82,9 @@ export default function ROProcess() {
     switch (status) {
       case 'COMPLETED':
         return 'bg-green-100 text-green-700';
-      case 'DELIVERY':
+      case 'IN_DELIVERY':
         return 'bg-blue-100 text-blue-700';
-      case 'DNPB PROCESS':
+      case 'DNPB_PROCESS':
         return 'bg-yellow-100 text-yellow-700';
       case 'QUEUE':
         return 'bg-gray-100 text-gray-600';
@@ -127,7 +128,7 @@ export default function ROProcess() {
         >
           All
         </button>
-        {['DELIVERY', 'DNPB PROCESS', 'COMPLETED'].map((status) => (
+        {['IN_DELIVERY', 'DNPB_PROCESS', 'COMPLETED'].map((status) => (
           <button
             key={status}
             onClick={() => setFilterStatus(status as ROStatus)}
@@ -295,18 +296,46 @@ export default function ROProcess() {
             <Package className="w-4 h-4" /> View Articles
           </button>
           <button 
-            onClick={() => {
+            onClick={async () => {
               const currentIndex = statusFlow.findIndex(s => s.id === selectedRO.currentStatus);
-              if (currentIndex < statusFlow.length - 1) {
-                const nextStatus = statusFlow[currentIndex + 1];
-                selectedRO.currentStatus = nextStatus.id;
-                setSelectedRO({...selectedRO});
-                alert(`Status advanced to: ${nextStatus.label}`);
+              if (currentIndex >= statusFlow.length - 1) {
+                alert('Order already completed');
+                return;
+              }
+              
+              const nextStatus = statusFlow[currentIndex + 1];
+              setIsLoading(true);
+              
+              try {
+                const res = await fetch('/api/ro/status', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ roId: selectedRO.id, status: nextStatus.id })
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                  setSelectedRO({ ...selectedRO, currentStatus: nextStatus.id });
+                  fetchROData();
+                } else {
+                  alert(`Error: ${result.error}`);
+                }
+              } catch (error) {
+                alert('Failed to update status');
+                console.error(error);
+              } finally {
+                setIsLoading(false);
               }
             }}
-            className="flex-1 bg-[#00D084] text-white py-3 rounded-xl font-medium hover:bg-[#00B874] transition-colors flex items-center justify-center gap-2"
+            disabled={isLoading || statusFlow.findIndex(s => s.id === selectedRO.currentStatus) >= statusFlow.length - 1}
+            className="flex-1 bg-[#00D084] text-white py-3 rounded-xl font-medium hover:bg-[#00B874] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next Stage <ChevronRight className="w-4 h-4" />
+            {isLoading ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <>Next Stage <ChevronRight className="w-4 h-4" /></>
+            )}
           </button>
         </div>
       </div>
