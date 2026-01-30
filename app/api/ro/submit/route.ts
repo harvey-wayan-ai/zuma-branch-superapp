@@ -62,9 +62,13 @@ export async function POST(request: Request) {
       ro_id: roId,
       article_code: article.code,
       article_name: article.name,
-      boxes_requested: article.boxes,
-      boxes_allocated_ddd: 0,
-      boxes_allocated_ljbb: 0,
+      boxes_requested: article.boxes 
+        ? article.boxes // Backward compatibility: old format
+        : (article.boxes_ddd || 0) + (article.boxes_ljbb || 0) + (article.boxes_mbb || 0) + (article.boxes_ubb || 0),
+      boxes_allocated_ddd: article.boxes_ddd || 0,
+      boxes_allocated_ljbb: article.boxes_ljbb || 0,
+      boxes_allocated_mbb: article.boxes_mbb || 0,
+      boxes_allocated_ubb: article.boxes_ubb || 0,
       status: 'QUEUE',
       store_name: store_name,
       notes: notes || null,
