@@ -720,3 +720,58 @@ Stock Akhir = Transaksi IN - Transaksi OUT - ro_ongoing
 ### 📚 DOCUMENTATION CREATED
 
 - `docs/DATABASE_LOGIC.md` - Complete table/VIEW logic documentation
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Dashboard Real Data)
+
+### ✅ RO DASHBOARD - CONNECTED TO REAL DATA
+
+**Changes:**
+
+1. **Created `/api/ro/dashboard` endpoint**
+   - Fetches from `ro_process` table in `branch_super_app_clawdbot` schema
+   - Groups by `ro_id` to get unique ROs
+   - Returns stats: totalRO, queued, totalBoxes, totalPairs
+   - Returns roList with store, box count, status
+
+2. **Updated `DashboardContent` component**
+   - Removed hardcoded dummy data
+   - Added `useState` for stats and roData
+   - Added `useEffect` to fetch on mount
+   - Added loading state with spinner
+   - Added refresh button
+   - Added empty state message
+   - **Layout preserved** - same 2x2 stats grid, same table design
+
+**API Response Structure:**
+```json
+{
+  "success": true,
+  "data": {
+    "stats": {
+      "totalRO": 3,
+      "queued": 3,
+      "totalBoxes": 9,
+      "totalPairs": 108
+    },
+    "roList": [
+      { "id": "RO-2601-0003", "store": "Zuma Icon Gresik", "box": 5, "status": "queue" }
+    ]
+  }
+}
+```
+
+**Status Badge Mapping:**
+| Database Status | Badge Display |
+|-----------------|---------------|
+| COMPLETED | green "complete" |
+| IN_DELIVERY | blue "delivery" |
+| READY_TO_SHIP | purple "ready" |
+| PICKING/PICK_VERIFIED | orange "picking" |
+| APPROVED | cyan "approved" |
+| QUEUE | gray "queue" |
+
+**Files Modified:**
+- `app/api/ro/dashboard/route.ts` (NEW)
+- `components/ROPage.tsx` (UPDATED)
