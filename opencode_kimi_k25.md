@@ -870,13 +870,38 @@ Added status badge to Layer 3 header card (top-right corner).
 
 ---
 
-## 📋 REMAINING TODO - RO Process Tab
+## ✅ COMPLETED - Next Stage Button Fix (2026-01-30)
 
-### Next Stage Button (NOT WORKING)
-1. ⬜ Create `/api/ro/status` endpoint (PATCH) - Update status in Supabase
-2. ⬜ Update `statusFlow` array in ROProcess.tsx - Add DNPB_PROCESS (9 stages)
-3. ⬜ Modify button onClick - Call API, handle loading, refresh data
-4. ⬜ Test status progression end-to-end
+### 1. StatusFlow Array Updated (9 Stages)
+```
+QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_SHIP → IN_DELIVERY → ARRIVED → COMPLETED
+```
+
+### 2. Created `/api/ro/status` Endpoint
+- **Method:** PATCH
+- **Body:** `{ roId: string, status: string }`
+- **Validates:** Status must be one of 9 valid statuses
+- **Updates:** `ro_process` table in Supabase (all rows with matching ro_id)
+- **File:** `app/api/ro/status/route.ts`
+
+### 3. Next Stage Button Updated
+- Calls `/api/ro/status` API on click
+- Shows loading spinner during request
+- Disabled when status = COMPLETED
+- Refreshes data on success
+- Error handling with alerts
+
+### 4. Filter Buttons Updated
+- Changed from legacy `DELIVERY`, `DNPB PROCESS` 
+- Now uses `IN_DELIVERY`, `DNPB_PROCESS`
+
+**Files Modified:**
+- `app/api/ro/status/route.ts` (NEW)
+- `components/ROProcess.tsx` (UPDATED)
+
+---
+
+## 📋 REMAINING TODO
 
 ### Other Pending Features
 - ⬜ SKU Page - Product catalog with search
