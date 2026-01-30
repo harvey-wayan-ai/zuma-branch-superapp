@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, GitBranch, ShoppingCart, RefreshCw } from 'lucide-react';
+import { ShoppingCart, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequestForm from './RequestForm';
 import ROProcess from './ROProcess';
