@@ -447,8 +447,7 @@ export default function ROProcess() {
     
     setIsSaving(true);
     try {
-      let hasError = false;
-      for (const [articleCode, values] of Object.entries(editedArticles)) {
+      const updatePromises = Object.entries(editedArticles).map(async ([articleCode, values]) => {
         const res = await fetch('/api/ro/articles', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -460,16 +459,20 @@ export default function ROProcess() {
           })
         });
         const result = await res.json();
-        if (!result.success) {
-          alert(`Error updating ${articleCode}: ${result.error}`);
-          hasError = true;
-        }
+        return { articleCode, success: result.success, error: result.error };
+      });
+
+      const results = await Promise.all(updatePromises);
+      const errors = results.filter(r => !r.success);
+      
+      if (errors.length > 0) {
+        alert(`Failed to update: ${errors.map(e => `${e.articleCode}: ${e.error}`).join(', ')}`);
       }
       
       setEditedArticles({});
       const freshData = await fetchROData();
       
-      if (!hasError && freshData.length > 0) {
+      if (errors.length === 0 && freshData.length > 0) {
         const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
         if (updatedRO) {
           setSelectedRO(updatedRO);
