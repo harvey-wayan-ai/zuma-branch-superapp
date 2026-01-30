@@ -38,25 +38,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate RO ID: RO-YYMM-XXXX
-    const now = new Date();
-    const yearMonth = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const prefix = `RO-${yearMonth}-`;
-
-    // Get last RO number for this month
-    const { data: lastRO } = await supabase
-      .from('ro_process')
-      .select('ro_id')
-      .like('ro_id', `${prefix}%`)
-      .order('ro_id', { ascending: false })
-      .limit(1);
-
-    let nextNum = 1;
-    if (lastRO && lastRO.length > 0 && lastRO[0].ro_id) {
-      const lastNum = parseInt(lastRO[0].ro_id.split('-')[2], 10);
-      nextNum = lastNum + 1;
+    const { data: roIdResult, error: roIdError } = await supabase
+      .rpc('generate_ro_id');
+    
+    if (roIdError || !roIdResult) {
+      console.error('Error generating RO ID:', roIdError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to generate RO ID' },
+        { status: 500 }
+      );
     }
-    const roId = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    
+    const roId = roIdResult as string;
 
     const insertData = articles.map((article: any) => ({
       ro_id: roId,
