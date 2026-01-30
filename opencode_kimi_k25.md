@@ -453,6 +453,30 @@ RO Process tab shows submitted ROs
 | Submit | /api/ro/submit | → ro_process | Creates RO with ro_id |
 | RO Process | /api/ro/process | ro_process | Lists submitted ROs |
 
+### AUTO Button Logic
+
+**Filter criteria:**
+1. `"Store Name"` = selected store
+2. `"Recommendation (box)"` > 0 (only articles with recommended quantity)
+3. Ordered by `"Tier"` ascending (priority: lower tier = higher priority)
+
+**Stock data joined from master_mutasi_whs:**
+- `"Stock Akhir DDD"` → ddd_available
+- `"Stock Akhir LJBB"` → ljbb_available  
+- `"Stock Akhir MBB"` → mbb_available
+- `"Stock Akhir UBB"` → ubb_available
+- `"Stock Akhir Total"` → total_available
+
+### +Add Button Logic
+
+**Filter criteria:**
+1. Search by `"Kode Artikel"` or `"Nama Artikel"` (ilike)
+2. Optional gender filter (inferred from article code: M=MEN, W=WOMEN, K=KIDS)
+3. Aggregated by article code (sum stock across entities)
+
+**Stock columns (same as above):**
+- DDD, LJBB, MBB, UBB, Total
+
 ### ro_process Table Columns
 
 | Column | Source | Description |

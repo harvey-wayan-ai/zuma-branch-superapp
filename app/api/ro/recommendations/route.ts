@@ -17,6 +17,7 @@ export async function GET(request: Request) {
       .from('ro_recommendations')
       .select('*')
       .eq('Store Name', storeName)
+      .gt('Recommendation (box)', 0)
       .order('Tier', { ascending: true });
 
     if (recsError) {
@@ -60,6 +61,8 @@ export async function GET(request: Request) {
         warehouse_stock: {
           ddd_available: stockData?.['Stock Akhir DDD'] || 0,
           ljbb_available: stockData?.['Stock Akhir LJBB'] || 0,
+          mbb_available: stockData?.['Stock Akhir MBB'] || 0,
+          ubb_available: stockData?.['Stock Akhir UBB'] || 0,
           total_available: stockData?.['Stock Akhir Total'] || 0,
         },
       };

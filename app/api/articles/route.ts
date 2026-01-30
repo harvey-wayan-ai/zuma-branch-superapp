@@ -41,12 +41,16 @@ export async function GET(request: Request) {
           name: row['Nama Artikel'],
           ddd: 0,
           ljbb: 0,
+          mbb: 0,
+          ubb: 0,
           total: 0,
         });
       }
       const art = articleMap.get(code);
       art.ddd += Number(row['Stock Akhir DDD']) || 0;
       art.ljbb += Number(row['Stock Akhir LJBB']) || 0;
+      art.mbb += Number(row['Stock Akhir MBB']) || 0;
+      art.ubb += Number(row['Stock Akhir UBB']) || 0;
       art.total += Number(row['Stock Akhir Total']) || 0;
     });
 
@@ -69,6 +73,8 @@ export async function GET(request: Request) {
         warehouse_stock: {
           ddd_available: article.ddd,
           ljbb_available: article.ljbb,
+          mbb_available: article.mbb,
+          ubb_available: article.ubb,
           total_available: article.total,
         },
       };
