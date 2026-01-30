@@ -918,9 +918,9 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 
 ---
 
-## 🔧 NEXT IMPROVEMENTS - RO Process Tab
+## ✅ COMPLETED - RO Process Improvements (2026-01-30)
 
-### 1. DNPB Number Input Field
+### 1. DNPB Number Input Field ✅
 
 **Location:** Layer 2 (RO Detail) - shown only when `status = DNPB_PROCESS`
 
@@ -952,19 +952,40 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 4. One input = writes to 10-20 article rows (batch update)
 5. Then advance status to `READY_TO_SHIP`
 
-**Database:**
-- Column: `ro_process.dnpb_number` (VARCHAR 100)
-- Format: `DNPB/DDD/WHS/2026/I/001`
+**API Created:** `/api/ro/dnpb`
+- **PATCH:** Save DNPB number to all rows of ro_id
+- **GET:** Fetch existing DNPB number
+- Validates format: `DNPB/XXX/WHS/YYYY/M/NNN`
+
+**Files:** `app/api/ro/dnpb/route.ts`
+
+### 2. Search RO by ID ✅
+
+**Location:** Layer 1 (RO List) - search input above filter buttons
+
+**Features:**
+- Search by RO ID (e.g., "RO-2601")
+- Search by Store name (e.g., "Matos")
+- Real-time filtering
+
+### 3. Edit Article Quantities ✅
+
+**Location:** Layer 3 (View Articles table)
+
+**Features:**
+- +/- buttons for DDD and LJBB columns
+- Yellow highlight on edited rows
+- "Save Changes" button appears when changes exist
+- Real-time total updates
+- Batch save all changes in one click
+
+**API Created:** `/api/ro/articles`
+- **PATCH:** Update `boxes_allocated_ddd`, `boxes_allocated_ljbb`, `boxes_requested`
+- Updates single article row by ro_id + article_code
+
+**Files:** `app/api/ro/articles/route.ts`
 
 **Performance Note:**
 - 1 RO ID = 10-20 articles
 - Each article = 5-10 boxes
-- Single API call updates all rows by ro_id
-
-### 2. Edit Article Quantities
-- ⬜ Allow editing DDD/LJBB boxes in Layer 3
-- ⬜ Save changes to Supabase
-
-### 3. Search RO by ID
-- ⬜ Add search input in Layer 1 (RO List)
-- ⬜ Filter by RO ID pattern
+- Single API call per article on save
