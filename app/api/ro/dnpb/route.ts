@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
         .eq('DNPB', dnpbNumber)
         .limit(1);
       
-      dnpbMatch = (txMatch && txMatch.length > 0);
+      dnpbMatch = !!(txMatch && txMatch.length > 0);
     }
 
     const { data, error } = await supabase
