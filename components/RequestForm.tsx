@@ -8,10 +8,15 @@ interface ArticleItem {
   id: string;
   code: string;
   name: string;
-  boxes: number;
+  boxes_ddd: number;
+  boxes_ljbb: number;
+  boxes_mbb: number;
+  boxes_ubb: number;
   warehouse_stock: {
     ddd_available: number;
     ljbb_available: number;
+    mbb_available: number;
+    ubb_available: number;
     total_available: number;
   };
 }
@@ -24,6 +29,8 @@ interface AvailableArticle {
   warehouse_stock: {
     ddd_available: number;
     ljbb_available: number;
+    mbb_available: number;
+    ubb_available: number;
     total_available: number;
   };
 }
@@ -36,6 +43,8 @@ interface RecommendationItem {
   warehouse_stock: {
     ddd_available: number;
     ljbb_available: number;
+    mbb_available: number;
+    ubb_available: number;
     total_available: number;
   };
 }
@@ -124,14 +133,32 @@ export default function RequestForm() {
       const result = await response.json();
       
       if (result.success && result.data.length > 0) {
+        // Helper to auto-allocate boxes across warehouses
+        const allocateBoxes = (suggested: number, dddAvail: number, ljbbAvail: number) => {
+          const ddd = Math.min(suggested, dddAvail);
+          const remaining = suggested - ddd;
+          const ljbb = Math.min(remaining, ljbbAvail);
+          return { ddd, ljbb };
+        };
+
         // Convert recommendations to article items
-        const recommendationItems: ArticleItem[] = result.data.map((rec: RecommendationItem) => ({
-          id: `${rec.article_code}-${Date.now()}-${Math.random()}`,
-          code: rec.article_code,
-          name: rec.article_name,
-          boxes: Math.min(rec.suggested_boxes, rec.warehouse_stock.total_available),
-          warehouse_stock: rec.warehouse_stock,
-        }));
+        const recommendationItems: ArticleItem[] = result.data.map((rec: RecommendationItem) => {
+          const { ddd, ljbb } = allocateBoxes(
+            rec.suggested_boxes,
+            rec.warehouse_stock.ddd_available,
+            rec.warehouse_stock.ljbb_available
+          );
+          return {
+            id: `${rec.article_code}-${Date.now()}-${Math.random()}`,
+            code: rec.article_code,
+            name: rec.article_name,
+            boxes_ddd: ddd,
+            boxes_ljbb: ljbb,
+            boxes_mbb: 0,
+            boxes_ubb: 0,
+            warehouse_stock: rec.warehouse_stock,
+          };
+        });
         
         // Replace current articles with recommendations
         setArticles(recommendationItems);
@@ -154,15 +181,20 @@ export default function RequestForm() {
   });
 
   const addArticle = (article: AvailableArticle) => {
+    const dddStock = article.warehouse_stock.ddd_available || 0;
+    const ljbbStock = article.warehouse_stock.ljbb_available || 0;
+    
     const newItem: ArticleItem = {
       id: `${article.code}-${Date.now()}`,
       code: article.code,
       name: article.name,
-      boxes: 1,
+      boxes_ddd: Math.min(1, dddStock),
+      boxes_ljbb: dddStock >= 1 ? 0 : Math.min(1, ljbbStock),
+      boxes_mbb: 0,
+      boxes_ubb: 0,
       warehouse_stock: article.warehouse_stock,
     };
     setArticles([...articles, newItem]);
-    // Keep modal open, just clear search
     setSearchQuery('');
   };
 
@@ -170,15 +202,20 @@ export default function RequestForm() {
     setArticles(articles.filter((item) => item.id !== id));
   };
 
-  const updateBoxes = (id: string, boxes: number) => {
-    if (boxes >= 1) {
-      setArticles(articles.map((item) => 
-        item.id === id ? { ...item, boxes } : item
-      ));
-    }
+  const updateWarehouseQty = (id: string, warehouse: 'ddd' | 'ljbb' | 'mbb' | 'ubb', delta: number) => {
+    setArticles(articles.map((item) => {
+      if (item.id !== id) return item;
+      const key = `boxes_${warehouse}` as keyof ArticleItem;
+      const stockKey = `${warehouse}_available` as keyof typeof item.warehouse_stock;
+      const current = item[key] as number;
+      const max = item.warehouse_stock[stockKey];
+      const newVal = Math.max(0, Math.min(current + delta, max));
+      return { ...item, [key]: newVal };
+    }));
   };
 
-  const totalBoxes = articles.reduce((sum, item) => sum + item.boxes, 0);
+  const totalBoxes = articles.reduce((sum, item) => 
+    sum + item.boxes_ddd + item.boxes_ljbb + item.boxes_mbb + item.boxes_ubb, 0);
   const totalPairs = totalBoxes * 12;
 
   // Get stock status color
@@ -187,6 +224,11 @@ export default function RequestForm() {
     if (requested > available) return 'yellow';
     return 'green';
   };
+
+  const hasZeroStockItems = articles.some(a => 
+    (a.boxes_ddd + a.boxes_ljbb + a.boxes_mbb + a.boxes_ubb) > 0 && 
+    (a.warehouse_stock.ddd_available + a.warehouse_stock.ljbb_available) === 0
+  );
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -203,7 +245,10 @@ export default function RequestForm() {
           articles: articles.map(a => ({
             code: a.code,
             name: a.name,
-            boxes: a.boxes,
+            boxes_ddd: a.boxes_ddd,
+            boxes_ljbb: a.boxes_ljbb,
+            boxes_mbb: a.boxes_mbb,
+            boxes_ubb: a.boxes_ubb,
             warehouse_stock: a.warehouse_stock,
           })),
           notes: notes,
@@ -425,7 +470,8 @@ export default function RequestForm() {
         ) : (
           <div className="divide-y divide-gray-100">
             {articles.map((article) => {
-              const stockStatus = getStockStatusColor(article.boxes, article.warehouse_stock?.total_available || 0);
+              const totalRequested = article.boxes_ddd + article.boxes_ljbb + article.boxes_mbb + article.boxes_ubb;
+              const stockStatus = getStockStatusColor(totalRequested, article.warehouse_stock?.total_available || 0);
               const stockBadgeColor = stockStatus === 'green' ? 'bg-green-100 text-green-700' : 
                                       stockStatus === 'yellow' ? 'bg-yellow-100 text-yellow-700' : 
                                       'bg-red-100 text-red-700';
@@ -450,40 +496,26 @@ export default function RequestForm() {
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateBoxes(article.id, article.boxes - 1)}
-                        className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-50"
-                        disabled={article.boxes <= 1}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-
-                      <div className="text-center min-w-[60px]">
-                        <p className={`text-lg font-bold ${stockStatus === 'red' ? 'text-red-600' : 'text-[#0D3B2E]'}`}>
-                          {article.boxes}
-                        </p>
-                        <p className="text-xs text-gray-500">box</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-1">
+                      <span className="text-blue-700">DDD:</span>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => updateWarehouseQty(article.id, 'ddd', -1)} disabled={article.boxes_ddd <= 0} className="w-5 h-5 rounded bg-blue-100 text-blue-700 disabled:opacity-50">-</button>
+                        <span className="w-6 text-center font-medium">{article.boxes_ddd}</span>
+                        <button onClick={() => updateWarehouseQty(article.id, 'ddd', 1)} disabled={article.boxes_ddd >= article.warehouse_stock.ddd_available} className="w-5 h-5 rounded bg-blue-100 text-blue-700 disabled:opacity-50">+</button>
                       </div>
-                      
-                      <button
-                        onClick={() => updateBoxes(article.id, article.boxes + 1)}
-                        className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-50"
-                        disabled={article.boxes >= (article.warehouse_stock?.total_available || 0)}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
                     </div>
-
-                    <div className="text-right flex-1">
-                      <p className="text-xs text-gray-500">= {article.boxes * 12} pairs</p>
-                      {article.warehouse_stock && (
-                        <p className="text-[10px] text-gray-400">
-                          DDD: {article.warehouse_stock.ddd_available} | LJBB: {article.warehouse_stock.ljbb_available}
-                        </p>
-                      )}
+                    <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-1">
+                      <span className="text-purple-700">LJBB:</span>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)} disabled={article.boxes_ljbb <= 0} className="w-5 h-5 rounded bg-purple-100 text-purple-700 disabled:opacity-50">-</button>
+                        <span className="w-6 text-center font-medium">{article.boxes_ljbb}</span>
+                        <button onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)} disabled={article.boxes_ljbb >= article.warehouse_stock.ljbb_available} className="w-5 h-5 rounded bg-purple-100 text-purple-700 disabled:opacity-50">+</button>
+                      </div>
                     </div>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Total: {article.boxes_ddd + article.boxes_ljbb} boxes = {(article.boxes_ddd + article.boxes_ljbb) * 12} pairs
                   </div>
                 </div>
               );
@@ -670,7 +702,7 @@ export default function RequestForm() {
       {/* Submit Button */}
       <Button
         onClick={handleSubmit}
-        disabled={!selectedStore || articles.length === 0 || isSubmitting}
+        disabled={!selectedStore || articles.length === 0 || isSubmitting || hasZeroStockItems}
         className="w-full bg-[#00D084] hover:bg-[#00B874] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
