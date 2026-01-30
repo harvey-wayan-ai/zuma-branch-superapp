@@ -903,6 +903,12 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 
 ## 📋 REMAINING TODO
 
+### 🐛 BUG: Edit Article Quantities Not Saving
+- **Issue:** +/- buttons update UI but changes don't persist to Supabase
+- **Location:** Layer 3 (View Articles) → Save Changes button
+- **API:** `/api/ro/articles` - needs debugging
+- **Priority:** High
+
 ### WH Page (formerly SKU Page)
 - ⬜ WHS Dashboard - source: `master_mutasi_whs` VIEW
 - ⬜ Design TBD - figuring out layout, metrics, what to sum/display
