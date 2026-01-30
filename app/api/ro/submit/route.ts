@@ -89,13 +89,18 @@ export async function POST(request: Request) {
 
 
 
+    const totalBoxes = articles.reduce((sum: number, a: any) => {
+      if (a.boxes) return sum + a.boxes;
+      return sum + (a.boxes_ddd || 0) + (a.boxes_ljbb || 0) + (a.boxes_mbb || 0) + (a.boxes_ubb || 0);
+    }, 0);
+
     return NextResponse.json({
       success: true,
       data: {
         ro_id: roId,
         store_name,
         articles_count: articles.length,
-        total_boxes: articles.reduce((sum: number, a: any) => sum + a.boxes, 0),
+        total_boxes: totalBoxes,
         status: 'QUEUE',
       },
     });

@@ -634,3 +634,41 @@ ro_totals AS (
 - `supabase_transkasiDDD` - "DNPB" column ✅
 - `supabase_transkasiLJBB` - "DNPB" column ✅
 - `supabase_transkasiMBB` - "DNPB" column ✅
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Request Form Complete)
+
+### ✅ REQUEST FORM FULLY FUNCTIONAL
+
+**Tested Flow:**
+1. Select store from dropdown → ✅
+2. Add articles manually or use AUTO → ✅
+3. Adjust per-warehouse quantities (DDD/LJBB) → ✅
+4. Submit RO → ✅
+5. Stock deducted from master_mutasi_whs → ✅
+
+**Test RO Created:**
+- RO ID: `RO-2601-0001`
+- Store: Zuma Matos
+- Article: B2TS01 (2 DDD + 1 LJBB = 3 boxes)
+- Stock Before: DDD=31, LJBB=31, Total=62
+- Stock After: DDD=29, LJBB=30, Total=59 ✅
+
+### 🔧 VIEW FIX: Entity-Specific Calculations
+
+**Issue Found:** RO deductions were being applied to ALL entity rows, not just the matching entity.
+
+**Fix:** Updated master_mutasi_whs VIEW to only show/deduct stock for the entity matching the row:
+- DDD row → only DDD stock calculations
+- LJBB row → only LJBB stock calculations
+- MBB row → only MBB stock calculations
+
+### 📋 READY FOR TESTING
+
+The Request Form tab is now complete. You can:
+1. Go to RO page → Request Form tab
+2. Select a store (e.g., "Zuma Matos")
+3. Click AUTO to get recommendations, or Add articles manually
+4. Adjust DDD/LJBB quantities using +/- buttons
+5. Submit → Stock is deducted from master_mutasi_whs VIEW

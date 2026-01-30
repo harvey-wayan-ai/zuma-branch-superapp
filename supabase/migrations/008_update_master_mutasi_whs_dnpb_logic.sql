@@ -1,7 +1,8 @@
--- Migration: Update master_mutasi_whs VIEW to respect dnpb_match
+-- Migration: Update master_mutasi_whs VIEW
 -- Date: 2026-01-30
--- Purpose: Exclude RO allocations from calculation when dnpb_match = TRUE
---          (prevents double-counting when DNPB already exists in transaksi tables)
+-- Purpose: 
+--   1. Exclude RO allocations when dnpb_match = TRUE (prevents double-counting)
+--   2. Fix entity-specific stock calculations (each row only shows its entity's stock)
 
 DROP VIEW IF EXISTS branch_super_app_clawdbot.master_mutasi_whs;
 
@@ -25,8 +26,6 @@ WITH ddd_manual AS (
     FROM branch_super_app_clawdbot."supabase_transkasiMBB"
     GROUP BY "Artikel"
 ), ro_totals AS (
-    -- Only count RO allocations where dnpb_match = FALSE
-    -- If dnpb_match = TRUE, the transaction is already recorded in transaksi tables
     SELECT article_code,
         sum(CASE WHEN COALESCE(dnpb_match, FALSE) = FALSE THEN COALESCE(boxes_allocated_ddd, 0) ELSE 0 END) AS ro_out_ddd,
         sum(CASE WHEN COALESCE(dnpb_match, FALSE) = FALSE THEN COALESCE(boxes_allocated_ljbb, 0) ELSE 0 END) AS ro_out_ljbb
@@ -62,24 +61,31 @@ SELECT b."Entitas",
     CASE WHEN b."Entitas" = 'LJBB' THEN b."S. AWAL" ELSE 0 END AS "Stock Awal LJBB",
     CASE WHEN b."Entitas" = 'MBB' THEN b."S. AWAL" ELSE 0 END AS "Stock Awal MBB",
     0 AS "Stock Awal UBB",
-    COALESCE(dt.in_qty, 0) AS "DDD Transaksi IN",
-    COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0) AS "DDD Transaksi OUT",
-    COALESCE(lt.in_qty, 0) AS "LJBB Transaksi IN",
-    COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0) AS "LJBB Transaksi OUT",
-    COALESCE(mt.in_qty, 0) AS "MBB Transaksi IN",
-    COALESCE(mt.out_qty, 0) AS "MBB Transaksi OUT",
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.in_qty, 0) ELSE 0 END AS "DDD Transaksi IN",
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0) ELSE 0 END AS "DDD Transaksi OUT",
+    CASE WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.in_qty, 0) ELSE 0 END AS "LJBB Transaksi IN",
+    CASE WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0) ELSE 0 END AS "LJBB Transaksi OUT",
+    CASE WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.in_qty, 0) ELSE 0 END AS "MBB Transaksi IN",
+    CASE WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.out_qty, 0) ELSE 0 END AS "MBB Transaksi OUT",
     0 AS "UBB Transaksi IN",
     0 AS "UBB Transaksi OUT",
-    COALESCE(dt.in_qty, 0) - (COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0)) AS "Stock Akhir DDD",
-    COALESCE(lt.in_qty, 0) - (COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0)) AS "Stock Akhir LJBB",
-    COALESCE(mt.in_qty, 0) - COALESCE(mt.out_qty, 0) AS "Stock Akhir MBB",
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.in_qty, 0) - (COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0)) ELSE 0 END AS "Stock Akhir DDD",
+    CASE WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.in_qty, 0) - (COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0)) ELSE 0 END AS "Stock Akhir LJBB",
+    CASE WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.in_qty, 0) - COALESCE(mt.out_qty, 0) ELSE 0 END AS "Stock Akhir MBB",
     0 AS "Stock Akhir UBB",
     b."S. AWAL" AS "Stock Awal Total",
-    COALESCE(dt.in_qty, 0) + COALESCE(lt.in_qty, 0) + COALESCE(mt.in_qty, 0) AS "Transaksi IN Total",
-    COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0) + COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0) + COALESCE(mt.out_qty, 0) AS "Transaksi OUT Total",
-    (COALESCE(dt.in_qty, 0) - (COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0))) +
-    (COALESCE(lt.in_qty, 0) - (COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0))) +
-    (COALESCE(mt.in_qty, 0) - COALESCE(mt.out_qty, 0)) AS "Stock Akhir Total"
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.in_qty, 0)
+         WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.in_qty, 0)
+         WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.in_qty, 0)
+         ELSE 0 END AS "Transaksi IN Total",
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0)
+         WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0)
+         WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.out_qty, 0)
+         ELSE 0 END AS "Transaksi OUT Total",
+    CASE WHEN b."Entitas" = 'DDD' THEN COALESCE(dt.in_qty, 0) - (COALESCE(dt.out_qty, 0) + COALESCE(ro.ro_out_ddd, 0))
+         WHEN b."Entitas" = 'LJBB' THEN COALESCE(lt.in_qty, 0) - (COALESCE(lt.out_qty, 0) + COALESCE(ro.ro_out_ljbb, 0))
+         WHEN b."Entitas" = 'MBB' THEN COALESCE(mt.in_qty, 0) - COALESCE(mt.out_qty, 0)
+         ELSE 0 END AS "Stock Akhir Total"
 FROM master_base b
 LEFT JOIN ddd_manual dt ON b."Kode Artikel"::text = dt."Artikel"::text AND b."Entitas" = 'DDD'
 LEFT JOIN ljbb_manual lt ON b."Kode Artikel"::text = lt."Artikel"::text AND b."Entitas" = 'LJBB'
