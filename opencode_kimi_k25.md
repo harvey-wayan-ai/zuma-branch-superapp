@@ -477,6 +477,40 @@ RO Process tab shows submitted ROs
 **Stock columns (same as above):**
 - DDD, LJBB, MBB, UBB, Total
 
+### Warehouse Allocation Logic (AUTO-ALLOCATE)
+
+**Priority order:** DDD → LJBB only (MBB/UBB not for retail)
+
+**Rules:**
+1. First fill from DDD stock
+2. If DDD not enough, take remaining from LJBB
+3. NEVER auto-allocate from MBB or UBB (not for retail)
+4. MBB/UBB stock shown for visibility only
+
+**Example:**
+```
+User requests: 6 boxes
+Available: DDD=3, LJBB=5, MBB=2, UBB=1
+
+Allocation:
+- DDD: 3 (take all available)
+- LJBB: 3 (take remaining needed)
+- MBB: 0 (skip - not for retail)
+- UBB: 0 (skip - not for retail)
+
+Total: 6 boxes ✓
+```
+
+**If insufficient DDD+LJBB:**
+```
+User requests: 10 boxes
+Available: DDD=3, LJBB=5
+
+Allocation: DDD=3, LJBB=5 = 8 boxes
+Result: Can only fulfill 8 of 10 requested
+→ Show warning to user
+```
+
 ### ro_process Table Columns
 
 | Column | Source | Description |
@@ -497,3 +531,28 @@ RO Process tab shows submitted ROs
 2. ✅ Submit API - generates ro_id, includes article_name & notes
 3. ⬜ Test full RO submission flow end-to-end
 4. ⬜ Verify RO Process page displays submitted ROs correctly
+
+### 📋 NEXT FEATURE: Per-Warehouse Quantity Selection
+
+**Database:**
+- ⬜ Add `boxes_allocated_mbb` and `boxes_allocated_ubb` columns to ro_process
+
+**RequestForm.tsx:**
+- ⬜ Change qty input to show per-warehouse breakdown (DDD, LJBB, MBB, UBB)
+- ⬜ Allow manual override OR auto-allocate (DDD→LJBB priority)
+- ⬜ Validate: requested ≤ available per warehouse
+- ⬜ Show warning if DDD+LJBB insufficient
+
+**Submit API:**
+- ⬜ Accept boxes_ddd, boxes_ljbb, boxes_mbb, boxes_ubb
+- ⬜ Store in respective columns
+
+**ArticleItem interface:**
+```typescript
+{
+  boxes_ddd: number;
+  boxes_ljbb: number;
+  boxes_mbb: number;   // display only, not for retail
+  boxes_ubb: number;   // display only, not for retail
+}
+```
