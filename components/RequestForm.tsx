@@ -24,8 +24,6 @@ interface ArticleItem {
 interface AvailableArticle {
   code: string;
   name: string;
-  series: string;
-  gender: string;
   warehouse_stock: {
     ddd_available: number;
     ljbb_available: number;
@@ -56,7 +54,6 @@ export default function RequestForm() {
   const [notes, setNotes] = useState('');
   const [showArticleSelector, setShowArticleSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGender, setSelectedGender] = useState<string>('ALL');
   const [storeSearchQuery, setStoreSearchQuery] = useState('');
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
   
@@ -96,14 +93,13 @@ export default function RequestForm() {
     if (showArticleSelector) {
       fetchArticles();
     }
-  }, [showArticleSelector, searchQuery, selectedGender]);
+  }, [showArticleSelector, searchQuery]);
 
   const fetchArticles = async () => {
     setIsLoadingArticles(true);
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('q', searchQuery);
-      if (selectedGender !== 'ALL') params.append('gender', selectedGender);
       
       const response = await fetch(`/api/articles?${params.toString()}`);
       const result = await response.json();
@@ -578,7 +574,6 @@ export default function RequestForm() {
                   setArticles(tempArticles);
                   setShowArticleSelector(false);
                   setSearchQuery('');
-                  setSelectedGender('ALL');
                 }}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
@@ -586,34 +581,17 @@ export default function RequestForm() {
               </button>
             </div>
 
-            {/* Search & Filter */}
-            <div className="p-4 border-b border-gray-100 space-y-3">
+            <div className="p-4 border-b border-gray-100">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by code, name, or series..."
+                  placeholder="Search article name or code..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00D084] focus:border-transparent"
                   autoFocus
                 />
-              </div>
-              
-              <div className="flex gap-2">
-                {['ALL', 'MEN', 'WOMEN', 'KIDS'].map((gender) => (
-                  <button
-                    key={gender}
-                    onClick={() => setSelectedGender(gender)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      selectedGender === gender
-                        ? 'bg-[#0D3B2E] text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {gender === 'ALL' ? 'All' : gender}
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -646,18 +624,10 @@ export default function RequestForm() {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-mono text-gray-500">{article.code}</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full ${stockBadgeColor}`}>
-                              {article.warehouse_stock?.total_available || 0} available
-                            </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                              article.gender === 'MEN' ? 'bg-blue-100 text-blue-700' :
-                              article.gender === 'WOMEN' ? 'bg-pink-100 text-pink-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
-                              {article.gender}
+                              {article.warehouse_stock?.total_available || 0} box
                             </span>
                           </div>
                           <p className="text-sm font-medium text-gray-900">{article.name}</p>
-                          <p className="text-xs text-gray-400">{article.series} Series</p>
                           <p className="text-[10px] text-gray-400 mt-1">
                             DDD: {article.warehouse_stock?.ddd_available || 0} | LJBB: {article.warehouse_stock?.ljbb_available || 0}
                           </p>
@@ -687,7 +657,6 @@ export default function RequestForm() {
                     setTempArticles([]);
                     setShowArticleSelector(false);
                     setSearchQuery('');
-                    setSelectedGender('ALL');
                   }}
                   className="px-6 py-2 bg-[#00D084] hover:bg-[#00B874] text-white font-medium rounded-lg transition-colors"
                 >

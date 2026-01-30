@@ -672,3 +672,51 @@ The Request Form tab is now complete. You can:
 3. Click AUTO to get recommendations, or Add articles manually
 4. Adjust DDD/LJBB quantities using +/- buttons
 5. Submit → Stock is deducted from master_mutasi_whs VIEW
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Articles API & VIEW Updates)
+
+### ✅ ARTICLES API SIMPLIFIED
+
+**Changes:**
+- Removed gender/series filters (no product code convention)
+- Search by article name or code (case-insensitive via ilike)
+- Increased limit from 50 to 500 articles
+- Sorted by Nama Artikel for easier browsing
+
+**API Endpoint:** `GET /api/articles?q=search_term`
+
+### ✅ REQUEST FORM UI UPDATED
+
+**Removed:**
+- Gender filter buttons (ALL, MEN, LADIES, etc.)
+- Series display
+
+**Simplified:**
+- Search input only
+- Shows: code, name, stock (DDD | LJBB)
+- 0-stock items shown but disabled
+
+### ✅ master_mutasi_whs VIEW - ro_ongoing COLUMNS
+
+**New columns added (per entity):**
+- `ro_ongoing_ddd` - RO allocations from DDD (dnpb_match=FALSE)
+- `ro_ongoing_ljbb` - RO allocations from LJBB
+- `ro_ongoing_mbb` - RO allocations from MBB
+- `ro_ongoing_ubb` - RO allocations from UBB
+- `ro_ongoing_total` - Sum of all
+
+**Column order per entity:**
+```
+Transaksi IN → Transaksi OUT → ro_ongoing_[entity] → Stock Akhir
+```
+
+**Formula:**
+```
+Stock Akhir = Transaksi IN - Transaksi OUT - ro_ongoing
+```
+
+### 📚 DOCUMENTATION CREATED
+
+- `docs/DATABASE_LOGIC.md` - Complete table/VIEW logic documentation
