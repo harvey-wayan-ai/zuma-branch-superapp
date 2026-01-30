@@ -57,6 +57,8 @@ export default function ROProcess() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dnpbInput, setDnpbInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editedArticles, setEditedArticles] = useState<Record<string, { ddd: number; ljbb: number }>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchROData();
@@ -413,13 +415,70 @@ export default function ROProcess() {
     );
   };
 
+  const getArticleValues = (article: ROArticle) => {
+    const edited = editedArticles[article.kodeArtikel];
+    return {
+      ddd: edited?.ddd ?? article.dddBoxes,
+      ljbb: edited?.ljbb ?? article.ljbbBoxes,
+    };
+  };
+
+  const updateArticleQty = (articleCode: string, field: 'ddd' | 'ljbb', delta: number) => {
+    const article = selectedRO?.articles.find(a => a.kodeArtikel === articleCode);
+    if (!article) return;
+    
+    const current = getArticleValues(article);
+    const newValue = Math.max(0, current[field] + delta);
+    
+    setEditedArticles(prev => ({
+      ...prev,
+      [articleCode]: {
+        ...current,
+        [field]: newValue,
+      }
+    }));
+  };
+
+  const saveArticleChanges = async () => {
+    if (!selectedRO || Object.keys(editedArticles).length === 0) return;
+    
+    setIsSaving(true);
+    try {
+      for (const [articleCode, values] of Object.entries(editedArticles)) {
+        const res = await fetch('/api/ro/articles', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roId: selectedRO.id,
+            articleCode,
+            dddBoxes: values.ddd,
+            ljbbBoxes: values.ljbb,
+          })
+        });
+        const result = await res.json();
+        if (!result.success) {
+          alert(`Error updating ${articleCode}: ${result.error}`);
+        }
+      }
+      setEditedArticles({});
+      fetchROData();
+    } catch (error) {
+      alert('Failed to save changes');
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const hasChanges = Object.keys(editedArticles).length > 0;
+
   const renderArticlesView = () => {
     if (!selectedRO) return null;
 
     return (
       <div className="space-y-4">
         <button
-          onClick={() => setViewArticles(false)}
+          onClick={() => { setViewArticles(false); setEditedArticles({}); }}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronRight className="w-4 h-4 rotate-180" />
@@ -440,9 +499,19 @@ export default function ROProcess() {
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <h3 className="font-semibold text-gray-900 p-4 border-b border-gray-100">
-            Article Breakdown
-          </h3>
+          <div className="flex items-center justify-between p-4 border-b border-gray-100">
+            <h3 className="font-semibold text-gray-900">Article Breakdown</h3>
+            {hasChanges && (
+              <button
+                onClick={saveArticleChanges}
+                disabled={isSaving}
+                className="px-4 py-1.5 bg-[#00D084] text-white text-sm font-medium rounded-lg hover:bg-[#00B874] disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                Save Changes
+              </button>
+            )}
+          </div>
           
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -455,33 +524,49 @@ export default function ROProcess() {
                 </tr>
               </thead>
               <tbody>
-                {selectedRO.articles.map((article, idx) => (
-                  <tr key={idx} className="border-b border-gray-50 last:border-0">
-                    <td className="py-3 px-3">
-                      <p className="font-mono text-xs text-gray-500">{article.kodeArtikel}</p>
-                      <p className="text-gray-900 text-xs truncate max-w-[150px]">{article.namaArtikel}</p>
-                    </td>
-                    <td className="py-3 px-2 text-center font-medium text-gray-900">{article.boxesRequested}</td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="inline-block min-w-[32px] px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                        {article.dddBoxes}
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="inline-block min-w-[32px] px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium">
-                        {article.ljbbBoxes}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {selectedRO.articles.map((article, idx) => {
+                  const values = getArticleValues(article);
+                  const isEdited = !!editedArticles[article.kodeArtikel];
+                  return (
+                    <tr key={idx} className={cn("border-b border-gray-50 last:border-0", isEdited && "bg-yellow-50")}>
+                      <td className="py-3 px-3">
+                        <p className="font-mono text-xs text-gray-500">{article.kodeArtikel}</p>
+                        <p className="text-gray-900 text-xs truncate max-w-[150px]">{article.namaArtikel}</p>
+                      </td>
+                      <td className="py-3 px-2 text-center font-medium text-gray-900">{values.ddd + values.ljbb}</td>
+                      <td className="py-2 px-1 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', -1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">-</button>
+                          <span className="min-w-[24px] text-blue-700 font-medium">{values.ddd}</span>
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', 1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">+</button>
+                        </div>
+                      </td>
+                      <td className="py-2 px-1 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', -1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">-</button>
+                          <span className="min-w-[24px] text-purple-700 font-medium">{values.ljbb}</span>
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', 1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">+</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
-                <tr className="bg-gray-50 font-medium">
-                  <td className="py-3 px-3 text-gray-700">Total</td>
-                  <td className="py-3 px-2 text-center text-gray-900">{selectedRO.totalBoxes}</td>
-                  <td className="py-3 px-2 text-center text-blue-700">{selectedRO.dddBoxes}</td>
-                  <td className="py-3 px-2 text-center text-purple-700">{selectedRO.ljbbBoxes}</td>
-                </tr>
+                {(() => {
+                  const totals = selectedRO.articles.reduce((acc, article) => {
+                    const values = getArticleValues(article);
+                    return { ddd: acc.ddd + values.ddd, ljbb: acc.ljbb + values.ljbb };
+                  }, { ddd: 0, ljbb: 0 });
+                  return (
+                    <tr className="bg-gray-50 font-medium">
+                      <td className="py-3 px-3 text-gray-700">Total</td>
+                      <td className="py-3 px-2 text-center text-gray-900">{totals.ddd + totals.ljbb}</td>
+                      <td className="py-3 px-2 text-center text-blue-700">{totals.ddd}</td>
+                      <td className="py-3 px-2 text-center text-purple-700">{totals.ljbb}</td>
+                    </tr>
+                  );
+                })()}
               </tfoot>
             </table>
           </div>
