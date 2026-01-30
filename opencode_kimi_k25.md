@@ -995,3 +995,102 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 - 1 RO ID = 10-20 articles
 - Each article = 5-10 boxes
 - Single API call per article on save
+
+---
+
+## SESSION UPDATE - 2026-01-30 (Bug Fix & Audit)
+
+### ✅ BUG FIX: Edit Article Quantities Now Persists
+
+**Issue:** +/- buttons updated UI but changes didn't persist after clicking "Save Changes"
+
+**Root Cause:** After `fetchROData()` updated `roData`, `selectedRO` still pointed to stale data. When `editedArticles` was cleared, UI fell back to old values.
+
+**Fix:** 
+- Modified `fetchROData()` to return fetched data
+- In `saveArticleChanges()`, update `selectedRO` with fresh data after save
+
+**Commit:** `9ed899d` - Deployed to Vercel
+
+---
+
+### ✅ COMPREHENSIVE AUDIT COMPLETED
+
+**Scope:** RO Page (Dashboard, Request Form, RO Process)
+
+**Method:** 4 parallel AI agents audited:
+1. Frontend components (code quality, UX, accessibility)
+2. API endpoints (security, validation, error handling)
+3. Supabase integration (client config, queries, schema)
+4. Business logic (data flow, rules, state management)
+
+**Results Summary:**
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 11 |
+| HIGH | 15 |
+| MEDIUM | 19 |
+| LOW | 16 |
+| **TOTAL** | **61** |
+
+**Top Critical Findings:**
+1. No authentication on ANY API endpoint
+2. SQL injection vulnerability in /api/articles
+3. Hardcoded Google service account private key
+4. Race condition in RO ID generation
+5. Stock can go negative (stale data validation)
+6. DNPB matching logic NOT implemented
+
+**Full Report:** `docs/AUDIT_REPORT_2026-01-30.md`
+
+---
+
+### ✅ AUDIT FIXES IMPLEMENTED (2026-01-30)
+
+**All 10 priority fixes completed and deployed:**
+
+| # | Fix | Commit | Status |
+|---|-----|--------|--------|
+| 1 | SQL injection in /api/articles | `c186d8a` | ✅ |
+| 2 | Remove hardcoded Google private key | `65998f8` | ✅ |
+| 3 | Refresh timeout race condition | `1eba426` | ✅ |
+| 4 | RO ID generation race condition | `4d289bd` | ✅ |
+| 5 | Server-side stock validation | `e58ed50` | ✅ |
+| 6 | DNPB matching with transaction tables | `4775827` | ✅ |
+| 7 | Status transition validation | `acdaf39` | ✅ |
+| 8 | API response null checks | `4a4b183` | ✅ |
+| 9 | Promise.all for batch article saves | `71b43ba` | ✅ |
+| 10 | Remove unused imports | `508a211` | ✅ |
+
+**Deployed:** All changes pushed to GitHub, auto-deployed to Vercel.
+
+---
+
+### 📋 REMAINING ITEMS (From Audit - Not Yet Fixed)
+
+**Security (Still Needed):**
+- [ ] Add authentication middleware (NextAuth/Supabase Auth)
+- [ ] Implement authorization (store-level access control)
+- [ ] Add rate limiting
+
+**UX Improvements:**
+- [ ] Replace alert() with toast notifications (17 instances)
+- [ ] Add confirmation dialogs for destructive actions
+- [ ] Add unsaved changes warnings
+- [ ] Add loading states for store dropdown
+
+**Performance:**
+- [ ] Add React.memo to components
+- [ ] Add useCallback/useMemo where needed
+- [ ] Fix N+1 query in recommendations API (use existing VIEW)
+- [ ] Add composite index on (ro_id, article_code)
+
+**Accessibility:**
+- [ ] Add aria-labels to buttons
+- [ ] Add focus indicators
+- [ ] Add scope="col" to table headers
+
+**Code Quality:**
+- [ ] Consolidate duplicate Supabase client (stores/route.ts)
+- [ ] Use Zod for input validation
