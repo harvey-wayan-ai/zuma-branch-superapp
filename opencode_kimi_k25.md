@@ -1062,6 +1062,8 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 | 8 | API response null checks | `4a4b183` | ✅ |
 | 9 | Promise.all for batch article saves | `71b43ba` | ✅ |
 | 10 | Remove unused imports | `508a211` | ✅ |
+| 11 | RO Process filter categories | `e3a6e2f` | ✅ |
+| 12 | useMemo/useCallback optimizations | `8fd0687` | ✅ |
 
 **Deployed:** All changes pushed to GitHub, auto-deployed to Vercel.
 
@@ -1081,8 +1083,7 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 - [ ] Add loading states for store dropdown
 
 **Performance:**
-- [ ] Add React.memo to components
-- [ ] Add useCallback/useMemo where needed
+- [x] ~~Add useCallback/useMemo where needed~~ ✅ Done
 - [ ] Fix N+1 query in recommendations API (use existing VIEW)
 - [ ] Add composite index on (ro_id, article_code)
 
