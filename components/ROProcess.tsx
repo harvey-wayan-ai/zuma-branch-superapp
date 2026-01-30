@@ -51,7 +51,7 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
 export default function ROProcess() {
   const [selectedRO, setSelectedRO] = useState<ROItem | null>(null);
   const [viewArticles, setViewArticles] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<ROStatus | 'ALL'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ONGOING' | 'SHIPPING' | 'COMPLETE'>('ALL');
   const [isLoading, setIsLoading] = useState(false);
   const [roData, setRoData] = useState<ROItem[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -90,8 +90,16 @@ export default function ROProcess() {
     }
   };
 
+  const ONGOING_STATUSES: ROStatus[] = ['QUEUE', 'APPROVED', 'PICKING', 'PICK_VERIFIED', 'DNPB_PROCESS'];
+  const SHIPPING_STATUSES: ROStatus[] = ['READY_TO_SHIP', 'IN_DELIVERY', 'ARRIVED'];
+  
   const filteredROList = roData.filter(ro => {
-    const matchesStatus = filterStatus === 'ALL' || ro.currentStatus === filterStatus;
+    let matchesStatus = false;
+    if (filterStatus === 'ALL') matchesStatus = true;
+    else if (filterStatus === 'ONGOING') matchesStatus = ONGOING_STATUSES.includes(ro.currentStatus);
+    else if (filterStatus === 'SHIPPING') matchesStatus = SHIPPING_STATUSES.includes(ro.currentStatus);
+    else if (filterStatus === 'COMPLETE') matchesStatus = ro.currentStatus === 'COMPLETED';
+    
     const matchesSearch = searchQuery === '' || 
       ro.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ro.store.toLowerCase().includes(searchQuery.toLowerCase());
@@ -148,29 +156,23 @@ export default function ROProcess() {
 
       {/* Filter */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        <button
-          onClick={() => setFilterStatus('ALL')}
-          className={cn(
-            "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors",
-            filterStatus === 'ALL' 
-              ? "bg-[#0D3B2E] text-white" 
-              : "bg-gray-100 text-gray-600"
-          )}
-        >
-          All
-        </button>
-        {['IN_DELIVERY', 'DNPB_PROCESS', 'COMPLETED'].map((status) => (
+        {[
+          { key: 'ONGOING', label: 'Ongoing' },
+          { key: 'SHIPPING', label: 'Shipping' },
+          { key: 'COMPLETE', label: 'Complete' },
+          { key: 'ALL', label: 'All' },
+        ].map(({ key, label }) => (
           <button
-            key={status}
-            onClick={() => setFilterStatus(status as ROStatus)}
+            key={key}
+            onClick={() => setFilterStatus(key as 'ALL' | 'ONGOING' | 'SHIPPING' | 'COMPLETE')}
             className={cn(
               "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors",
-              filterStatus === status 
+              filterStatus === key 
                 ? "bg-[#0D3B2E] text-white" 
                 : "bg-gray-100 text-gray-600"
             )}
           >
-            {status}
+            {label}
           </button>
         ))}
       </div>
