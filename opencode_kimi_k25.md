@@ -294,3 +294,71 @@ curl -X POST "https://zuma-ro-pwa.vercel.app/api/ro/submit" \
 - **Total rows imported:** 909 (ro_stockwhs) + recommendations data
 - **Cleaning script handles:** quotes, newlines, column mismatches automatically
 - **API Schema:** All endpoints use `branch_super_app_clawdbot` schema
+
+---
+
+## SESSION UPDATE - 2026-01-30
+
+### ✅ API FIXES COMPLETED
+
+**Issue 1: Foreign Key Relationship Error**
+- Error: "Could not find a relationship between 'ro_recommendations' and 'ro_whs_readystock'"
+- Fix: Changed from nested Supabase joins to separate queries + in-memory merge
+
+**Issue 2: Schema Permission Denied**
+- Error: "permission denied for schema branch_super_app_clawdbot"
+- Fix: Granted schema permissions to anon, authenticated, service_role
+
+```sql
+GRANT USAGE ON SCHEMA branch_super_app_clawdbot TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA branch_super_app_clawdbot TO anon, authenticated, service_role;
+```
+
+**Issue 3: Wrong Table for Stock Data**
+- Old: Using `ro_stockwhs` and `ro_whs_readystock`
+- New: Using `master_mutasi_whs` for stock data (Stock Akhir DDD/LJBB/Total)
+
+**Issue 4: Column Name Mapping**
+- DB columns have spaces and capitals: "Store Name", "Article Mix", "Tier", etc.
+- Fixed all column references in API endpoints
+
+### 📊 CORRECT DATA ARCHITECTURE
+
+**Tables & Relationships:**
+```
+ro_recommendations (2527 rows)
+├── "Store Name" = filter param
+├── "Article Mix" = join key
+└── "Tier", "Recommendation (box)", "ASSRT STATUS", "BROKEN SIZE"
+
+master_mutasi_whs (2727 rows)
+├── "Kode Artikel" = join key
+├── "Nama Artikel" = article name
+└── "Stock Akhir DDD", "Stock Akhir LJBB", "Stock Akhir Total"
+```
+
+**API Flow:**
+1. AUTO button → `/api/ro/recommendations?store_name=X`
+   - Query ro_recommendations filtered by store
+   - Query master_mutasi_whs for stock data
+   - Merge by "Article Mix" = "Kode Artikel"
+
+2. +Add button → `/api/articles?q=X&gender=X`
+   - Query master_mutasi_whs directly
+   - Infer gender/series from article code
+
+### ✅ APIs TESTED & WORKING
+
+- `/api/ro/recommendations` - Returns recommendations with stock ✅
+- `/api/articles` - Returns article catalog with stock ✅
+
+### 🔧 FILES MODIFIED
+
+- `lib/supabase.ts` - Using service_role key for schema access
+- `app/api/ro/recommendations/route.ts` - Fixed column names, separate queries
+- `app/api/articles/route.ts` - Query master_mutasi_whs directly
+
+### ⚠️ KNOWN ISSUES
+
+- Articles API returns duplicates (same article 3x for DDD/LJBB/MBB entities)
+- Need to add DISTINCT or aggregate by "Kode Artikel"

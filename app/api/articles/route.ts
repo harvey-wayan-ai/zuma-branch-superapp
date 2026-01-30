@@ -7,67 +7,51 @@ export async function GET(request: Request) {
     const query = searchParams.get('q') || '';
     const gender = searchParams.get('gender') || 'ALL';
 
-    // Query ro_stockwhs as the article master catalog
-    // Join with ro_whs_readystock VIEW for real-time available stock
-    let dbQuery = supabase
-      .from('ro_stockwhs')
-      .select(`
-        article_code,
-        article_name,
-        ddd_stock,
-        ljbb_stock,
-        total_stock,
-        ro_whs_readystock!inner(
-          ddd_available,
-          ljbb_available,
-          total_available
-        )
-      `);
+    let stockQuery = supabase.from('master_mutasi_whs').select('*');
 
-    // Apply search filter
     if (query) {
-      dbQuery = dbQuery.or(`article_code.ilike.%${query}%,article_name.ilike.%${query}%`);
+      stockQuery = stockQuery.or(`Kode Artikel.ilike.%${query}%,Nama Artikel.ilike.%${query}%`);
     }
 
-    // Execute query
-    const { data, error } = await dbQuery
-      .order('article_code')
+    const { data: articles, error: articlesError } = await stockQuery
+      .order('Kode Artikel')
       .limit(50);
 
-    if (error) {
-      console.error('Error fetching articles:', error);
+    if (articlesError) {
+      console.error('Error fetching articles:', articlesError);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: articlesError.message },
         { status: 500 }
       );
     }
 
-    // Transform data to match frontend interface
-    // Extract gender and series from article_code (e.g., M1AMV102 -> MEN, AIRMOVE)
-    const transformedData = data?.map((article: any) => {
-      const code = article.article_code;
-      // Infer gender from first character: M=MEN, W=WOMEN, K=KIDS
+    if (!articles || articles.length === 0) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
+    const transformedData = articles.map((article: any) => {
+      const code = article['Kode Artikel'];
+      
       let inferredGender = 'OTHER';
       if (code.startsWith('M')) inferredGender = 'MEN';
       else if (code.startsWith('W')) inferredGender = 'WOMEN';
       else if (code.startsWith('K')) inferredGender = 'KIDS';
       
-      // Extract series from code (characters 2-5 typically)
       const seriesMatch = code.match(/^[MWK]\d([A-Z]+)/);
       const series = seriesMatch ? seriesMatch[1] : 'UNKNOWN';
 
       return {
-        code: article.article_code,
-        name: article.article_name,
+        code: article['Kode Artikel'],
+        name: article['Nama Artikel'],
         series: series,
         gender: inferredGender,
         warehouse_stock: {
-          ddd_available: article.ro_whs_readystock?.ddd_available || 0,
-          ljbb_available: article.ro_whs_readystock?.ljbb_available || 0,
-          total_available: article.ro_whs_readystock?.total_available || 0,
+          ddd_available: article['Stock Akhir DDD'] || 0,
+          ljbb_available: article['Stock Akhir LJBB'] || 0,
+          total_available: article['Stock Akhir Total'] || 0,
         },
       };
-    }) || [];
+    });
 
     // Apply gender filter in memory (since we infer it from code)
     let filteredData = transformedData;
