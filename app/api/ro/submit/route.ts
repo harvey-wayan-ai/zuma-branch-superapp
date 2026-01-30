@@ -21,13 +21,48 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate stock availability for each article
-    const validationErrors = [];
+    const articleCodes = articles.map((a: any) => a.code);
+    const { data: stockData, error: stockError } = await supabase
+      .from('master_mutasi_whs')
+      .select('"Kode Artikel", "Stock Akhir DDD", "Stock Akhir LJBB", "Stock Akhir Total"')
+      .in('Kode Artikel', articleCodes);
+
+    if (stockError) {
+      console.error('Error fetching stock:', stockError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to validate stock availability' },
+        { status: 500 }
+      );
+    }
+
+    const stockMap = new Map(
+      (stockData || []).map((s: any) => [s['Kode Artikel'], {
+        ddd: Number(s['Stock Akhir DDD']) || 0,
+        ljbb: Number(s['Stock Akhir LJBB']) || 0,
+        total: Number(s['Stock Akhir Total']) || 0,
+      }])
+    );
+
+    const validationErrors: string[] = [];
     for (const article of articles) {
-      if (article.boxes > article.warehouse_stock?.total_available) {
-        validationErrors.push(
-          `Only ${article.warehouse_stock?.total_available} boxes available for ${article.code}. Please reduce quantity.`
-        );
+      const stock = stockMap.get(article.code);
+      const requestedDdd = article.boxes_ddd || 0;
+      const requestedLjbb = article.boxes_ljbb || 0;
+      const totalRequested = article.boxes || (requestedDdd + requestedLjbb);
+      
+      if (!stock) {
+        validationErrors.push(`Article ${article.code} not found in stock database.`);
+        continue;
+      }
+      
+      if (requestedDdd > stock.ddd) {
+        validationErrors.push(`DDD: Only ${stock.ddd} available for ${article.code}, requested ${requestedDdd}.`);
+      }
+      if (requestedLjbb > stock.ljbb) {
+        validationErrors.push(`LJBB: Only ${stock.ljbb} available for ${article.code}, requested ${requestedLjbb}.`);
+      }
+      if (totalRequested > stock.total) {
+        validationErrors.push(`Total: Only ${stock.total} available for ${article.code}, requested ${totalRequested}.`);
       }
     }
 
