@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Minus, Trash2, Package, Store, Send, Search, X, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
 interface ArticleItem {
@@ -159,11 +160,11 @@ export default function RequestForm() {
         // Replace current articles with recommendations
         setArticles(recommendationItems);
       } else {
-        alert(`No recommendations found for ${selectedStore}`);
+        toast.info(`No recommendations found for ${selectedStore}`);
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
-      alert('Error fetching recommendations. Please try again.');
+      toast.error('Error fetching recommendations. Please try again.');
     } finally {
       setIsLoadingRecommendations(false);
     }
@@ -195,6 +196,7 @@ export default function RequestForm() {
   }, []);
 
   const removeArticle = useCallback((id: string) => {
+    if (!confirm('Remove this article from the order?')) return;
     setArticles(prev => prev.filter((item) => item.id !== id));
   }, []);
 
@@ -256,7 +258,9 @@ export default function RequestForm() {
       const result = await response.json();
       
       if (result.success) {
-        alert(`RO Submitted Successfully!\n\nRO ID: ${result.data.ro_id}\nStore: ${result.data.store_name}\nArticles: ${result.data.articles_count}\nTotal Boxes: ${result.data.total_boxes}\nStatus: ${result.data.status}`);
+        toast.success('RO Submitted Successfully!', {
+          description: `${result.data.ro_id} • ${result.data.store_name} • ${result.data.articles_count} articles • ${result.data.total_boxes} boxes`,
+        });
         
         // Reset form after submission
         setSelectedStore('');
@@ -264,12 +268,12 @@ export default function RequestForm() {
         setNotes('');
       } else {
         setSubmitError(result.error || 'Failed to submit RO');
-        alert(`Error: ${result.error}`);
+        toast.error(result.error || 'Failed to submit RO');
       }
     } catch (error: any) {
       console.error('Error submitting RO:', error);
       setSubmitError(error.message);
-      alert(`Error: ${error.message}`);
+      toast.error(error.message || 'Failed to submit RO');
     } finally {
       setIsSubmitting(false);
     }
@@ -413,11 +417,11 @@ export default function RequestForm() {
             <button
               onClick={() => {
                 if (!selectedStore) {
-                  alert('Please select a destination store first!');
+                  toast.warning('Please select a destination store first!');
                   return;
                 }
                 if (specialStores.includes(selectedStore)) {
-                  alert('Auto-generate is only available for regular stores, not for Wholesale/Consignment/Other Need.');
+                  toast.info('Auto-generate is only available for regular stores');
                   return;
                 }
                 fetchRecommendations();
@@ -441,7 +445,7 @@ export default function RequestForm() {
             <Button
               onClick={() => {
                 if (!selectedStore) {
-                  alert('Please select a destination store first!');
+                  toast.warning('Please select a destination store first!');
                   return;
                 }
                 setTempArticles([...articles]);

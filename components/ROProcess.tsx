@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Database
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface ROArticle {
@@ -238,7 +239,11 @@ export default function ROProcess() {
       <div className="space-y-4">
         {/* Back Button */}
         <button
-          onClick={() => { setSelectedRO(null); setViewArticles(false); }}
+          onClick={() => {
+            if (dnpbInput && dnpbInput !== selectedRO.dnpbNumber && !confirm('You have unsaved DNPB. Discard it?')) return;
+            setSelectedRO(null);
+            setViewArticles(false);
+          }}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronRight className="w-4 h-4 rotate-180" />
@@ -351,14 +356,17 @@ export default function ROProcess() {
             onClick={async () => {
               const currentIndex = statusFlow.findIndex(s => s.id === selectedRO.currentStatus);
               if (currentIndex >= statusFlow.length - 1) {
-                alert('Order already completed');
+                toast.info('Order already completed');
                 return;
               }
+              
+              const nextStatus = statusFlow[currentIndex + 1];
+              if (!confirm(`Advance status to "${nextStatus.label}"?`)) return;
               
               if (selectedRO.currentStatus === 'DNPB_PROCESS') {
                 const dnpbToSave = dnpbInput || selectedRO.dnpbNumber;
                 if (!dnpbToSave) {
-                  alert('DNPB Number is required before proceeding');
+                  toast.warning('DNPB Number is required before proceeding');
                   return;
                 }
                 
@@ -371,18 +379,17 @@ export default function ROProcess() {
                   });
                   const dnpbResult = await dnpbRes.json();
                   if (!dnpbResult.success) {
-                    alert(`DNPB Error: ${dnpbResult.error}`);
+                    toast.error(`DNPB Error: ${dnpbResult.error}`);
                     setIsLoading(false);
                     return;
                   }
                 } catch (error) {
-                  alert('Failed to save DNPB number');
+                  toast.error('Failed to save DNPB number');
                   setIsLoading(false);
                   return;
                 }
               }
               
-              const nextStatus = statusFlow[currentIndex + 1];
               setIsLoading(true);
               
               try {
@@ -398,11 +405,12 @@ export default function ROProcess() {
                   setSelectedRO({ ...selectedRO, currentStatus: nextStatus.id, dnpbNumber: dnpbInput || selectedRO.dnpbNumber });
                   setDnpbInput('');
                   fetchROData();
+                  toast.success(`Status updated to ${nextStatus.label}`);
                 } else {
-                  alert(`Error: ${result.error}`);
+                  toast.error(result.error);
                 }
               } catch (error) {
-                alert('Failed to update status');
+                toast.error('Failed to update status');
                 console.error(error);
               } finally {
                 setIsLoading(false);
@@ -475,20 +483,23 @@ export default function ROProcess() {
       const errors = results.filter(r => !r.success);
       
       if (errors.length > 0) {
-        alert(`Failed to update: ${errors.map(e => `${e.articleCode}: ${e.error}`).join(', ')}`);
+        toast.error(`Failed to update: ${errors.map(e => e.articleCode).join(', ')}`);
       }
       
       setEditedArticles({});
       const freshData = await fetchROData();
       
-      if (errors.length === 0 && freshData.length > 0) {
-        const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
-        if (updatedRO) {
-          setSelectedRO(updatedRO);
+      if (errors.length === 0) {
+        toast.success('Changes saved successfully');
+        if (freshData.length > 0) {
+          const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
+          if (updatedRO) {
+            setSelectedRO(updatedRO);
+          }
         }
       }
     } catch (error) {
-      alert('Failed to save changes');
+      toast.error('Failed to save changes');
       console.error(error);
     } finally {
       setIsSaving(false);
@@ -503,7 +514,11 @@ export default function ROProcess() {
     return (
       <div className="space-y-4">
         <button
-          onClick={() => { setViewArticles(false); setEditedArticles({}); }}
+          onClick={() => {
+            if (hasChanges && !confirm('You have unsaved changes. Discard them?')) return;
+            setViewArticles(false);
+            setEditedArticles({});
+          }}
           className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronRight className="w-4 h-4 rotate-180" />
