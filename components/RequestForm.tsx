@@ -519,17 +519,17 @@ export default function RequestForm() {
                     <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-2">
                       <span className="text-blue-700 font-medium">DDD:</span>
                       <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => updateWarehouseQty(article.id, 'ddd', -1)} 
-                          disabled={article.boxes_ddd <= 0} 
+                        <button
+                          onClick={() => updateWarehouseQty(article.id, 'ddd', -1)}
+                          disabled={article.boxes_ddd <= 0}
                           className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           -
                         </button>
                         <span className="w-8 text-center font-bold text-sm">{article.boxes_ddd}</span>
-                        <button 
-                          onClick={() => updateWarehouseQty(article.id, 'ddd', 1)} 
-                          disabled={article.boxes_ddd >= article.warehouse_stock.ddd_available} 
+                        <button
+                          onClick={() => updateWarehouseQty(article.id, 'ddd', 1)}
+                          disabled={article.boxes_ddd >= Number(article.warehouse_stock?.ddd_available || 0)}
                           className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           +
@@ -539,17 +539,17 @@ export default function RequestForm() {
                     <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-2">
                       <span className="text-purple-700 font-medium">LJBB:</span>
                       <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)} 
-                          disabled={article.boxes_ljbb <= 0} 
+                        <button
+                          onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)}
+                          disabled={article.boxes_ljbb <= 0}
                           className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           -
                         </button>
                         <span className="w-8 text-center font-bold text-sm">{article.boxes_ljbb}</span>
-                        <button 
-                          onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)} 
-                          disabled={article.boxes_ljbb >= article.warehouse_stock.ljbb_available} 
+                        <button
+                          onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)}
+                          disabled={article.boxes_ljbb >= Number(article.warehouse_stock?.ljbb_available || 0)}
                           className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           +
