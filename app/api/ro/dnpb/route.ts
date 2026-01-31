@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { supabase } from '@/lib/supabase';
 
 export async function PATCH(request: Request) {
   try {
+    const authClient = await createClient();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { roId, dnpbNumber } = await request.json();
 
     if (!roId || !dnpbNumber) {
@@ -81,6 +92,16 @@ export async function PATCH(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const authClient = await createClient();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const roId = searchParams.get('roId');
 

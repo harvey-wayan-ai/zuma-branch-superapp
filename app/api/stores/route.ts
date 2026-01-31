@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
+import { createClient as createAuthClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
 
 const SPECIAL_STORES = ['Other Need', 'Wholesale', 'Consignment'];
 
 export async function GET() {
   try {
+    const authClient = await createAuthClient();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { supabase, SCHEMA } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
+    const authClient = await createClient();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { store_name, articles, notes } = body;
 

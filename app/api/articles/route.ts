@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
-import { supabase, SCHEMA } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
 
-    let stockQuery = supabase.from('master_mutasi_whs').select('*');
+    let stockQuery = supabase.schema('branch_super_app_clawdbot').from('master_mutasi_whs').select('*');
 
     if (query) {
       const sanitized = query
