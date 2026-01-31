@@ -1406,3 +1406,37 @@ if (error || !user) {
 
 **Session Complete** ✅
 
+
+---
+
+## SESSION UPDATE - 2026-01-31 (Request Form Improvements)
+
+### ✅ BUG FIXES
+
+**Issue:** +/- buttons not working even when stock available
+**Root Cause:** Stock values from API were strings, causing incorrect comparison
+**Fix:** Added `Number()` conversion in disabled prop
+**Commit:** `d41674b`
+
+**Issue:** No way to clear all articles at once
+**Fix:** Added "Clear All" button with confirmation
+**Commit:** `1128c53`
+
+### 🔧 TECHNICAL DETAILS
+
+**Stock Data Structure:**
+- `master_mutasi_whs` has multiple rows per article (different warehouses/entities)
+- API aggregates by summing: DDD=31, LJBB=31, Total=160 for M1CAV201
+- Frontend was receiving string values instead of numbers
+
+**Button Logic:**
+```typescript
+// Before (broken):
+disabled={article.boxes_ddd >= article.warehouse_stock.ddd_available}
+// 0 >= "31" → false (works by accident)
+
+// After (fixed):
+disabled={article.boxes_ddd >= Number(article.warehouse_stock?.ddd_available || 0)}
+// 0 >= 31 → false (correct)
+```
+

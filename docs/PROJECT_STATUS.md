@@ -1,6 +1,6 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-01-31  
+**Last Updated:** 2026-02-01  
 **Current Version:** v1.0.0  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
@@ -33,6 +33,11 @@
 - [x] API authorization (401 for unauthenticated requests)
 - [x] Session management with cookies
 - [x] Logout functionality
+
+### UX Improvements (Recent)
+- [x] Clear All button in Request Form
+- [x] Fixed +/- quantity buttons (type conversion bug)
+- [x] Improved button visibility and responsiveness
 
 ---
 
