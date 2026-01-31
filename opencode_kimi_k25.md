@@ -1302,3 +1302,19 @@ if (error || !user) {
 
 **Next:** Ready for next task (SKU catalog, Phase 2 roles, or other)
 
+
+---
+
+## NEXT TASK - PLANNED
+
+**Task:** Alter master_mutasi_whs table schema
+**Date:** Planned for next session
+
+**Requirements:**
+- Add columns to master_mutasi_whs: `tipe`, `gender`, `series`
+- Join with `portal_kodemix` table to populate these values
+- Update API routes to include new fields
+- Update frontend to display new columns
+
+**Schema:** branch_super_app_clawdbot (only)
+

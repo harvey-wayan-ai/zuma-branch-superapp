@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Moon, 
   Sun, 
@@ -17,13 +18,17 @@ import {
   Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [supabaseStatus, setSupabaseStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
   const [lastSalesUpdate, setLastSalesUpdate] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Check Supabase connection
   useEffect(() => {
@@ -52,6 +57,25 @@ export default function SettingsPage() {
     return `${Math.floor(diffMinutes / 1440)} days ago`;
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error('Logout failed', { description: error.message });
+        return;
+      }
+      toast.success('Logged out successfully');
+      router.push('/login');
+      router.refresh();
+    } catch (error: any) {
+      toast.error('Logout failed', { description: error.message });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   const settingsMenu = [
     {
       section: 'Account',
@@ -72,7 +96,7 @@ export default function SettingsPage() {
       section: 'Support',
       items: [
         { icon: HelpCircle, label: 'Help Center', badge: null },
-        { icon: LogOut, label: 'Logout', badge: null, danger: true },
+        { icon: LogOut, label: isLoggingOut ? 'Logging out...' : 'Logout', badge: null, danger: true, onClick: handleLogout },
       ]
     },
   ];
@@ -171,10 +195,18 @@ export default function SettingsPage() {
               return (
                 <button
                   key={item.label}
-                  onClick={() => 'onChange' in item && item.onChange && item.onChange(!item.value)}
+                  onClick={() => {
+                    if ('onClick' in item && item.onClick) {
+                      item.onClick();
+                    } else if ('onChange' in item && item.onChange) {
+                      item.onChange(!item.value);
+                    }
+                  }}
+                  disabled={isLoggingOut && item.label === 'Logout'}
                   className={cn(
                     "w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors",
-                    'danger' in item && item.danger && "text-red-600"
+                    'danger' in item && item.danger && "text-red-600",
+                    isLoggingOut && item.label === 'Logout' && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <div className="flex items-center gap-3">
