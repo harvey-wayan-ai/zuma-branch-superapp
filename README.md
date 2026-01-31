@@ -265,8 +265,10 @@ supabase/
 - [x] Confirmation dialogs for destructive actions
 - [x] Unsaved changes warnings
 - [x] Authentication (Phase 1 - Basic auth)
+- [x] Logout functionality
 - [ ] Authentication (Phase 2 - Role-based access)
-- [ ] SKU product catalog
+- [ ] Alter master_mutasi_whs (add tipe, gender, series from portal_kodemix)
+- [ ] WH Stock page (replaces SKU catalog)
 - [ ] Push notifications
 - [ ] Offline sync
 
