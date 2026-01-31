@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       .from('ro_recommendations')
       .select('*')
       .eq('Store Name', storeName)
-      .gt('Recommendation (box)', 0)
+      .gt('"Recommendation (box)"', 0)
       .order('Tier', { ascending: true });
 
     if (recsError) {
