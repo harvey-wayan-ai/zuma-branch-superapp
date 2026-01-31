@@ -1440,3 +1440,30 @@ disabled={article.boxes_ddd >= Number(article.warehouse_stock?.ddd_available || 
 // 0 >= 31 → false (correct)
 ```
 
+
+---
+
+## SESSION UPDATE - 2026-02-01 (Request Form Stock Display Fix)
+
+### ✅ BUG FIX
+
+**Issue:** User sees "49 available" but can't add boxes (buttons disabled)
+**Root Cause:** Stock was in MBB warehouse (wholesale), not DDD/LJBB (retail)
+**Solution:** Changed display to show only retail stock (DDD + LJBB)
+**Commit:** `527c8f6`
+
+**Before:**
+- Showed: "49 available" (total across all warehouses)
+- DDD: 0, LJBB: 0 (buttons disabled)
+- User confusion: why can't I add if 49 available?
+
+**After:**
+- Shows: "0 available" (retail stock only: DDD + LJBB)
+- DDD: 0, LJBB: 0 (buttons disabled)
+- Clear to user: no retail stock available
+
+**Business Rule:**
+- Retail team (AS) can only order from DDD/LJBB
+- MBB/UBB are wholesale-only warehouses
+- Prevents accidental wholesale orders
+
