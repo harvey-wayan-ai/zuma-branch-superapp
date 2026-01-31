@@ -19,7 +19,7 @@ Zuma Branch Super App is a comprehensive mobile-first PWA designed for Zuma Indo
 | Tab | Purpose |
 |-----|---------|
 | **Home** | Sales analytics dashboard with 7 breakdown tables |
-| **SKU** | Product catalog and inventory lookup |
+| **WH Stock** | Warehouse stock browser with tipe/gender/series filters |
 | **Action** | Quick actions center (future) |
 | **RO** | Replenishment Orders management (3 sub-tabs) |
 | **Settings** | System status and configuration |
@@ -115,7 +115,7 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 
 ### VIEW: `master_mutasi_whs`
 
-Calculated view that combines stock and transactions:
+Calculated view that combines stock, transactions, and article metadata:
 
 ```
 Stock Akhir = Stock Awal + Transaksi IN - Transaksi OUT - RO Allocations
@@ -125,6 +125,12 @@ Stock Akhir = Stock Awal + Transaksi IN - Transaksi OUT - RO Allocations
 - RO allocations only counted when `dnpb_match = FALSE`
 - When `dnpb_match = TRUE`, stock already deducted via transaction tables (prevents double-counting)
 - Each entity row (DDD/LJBB/MBB) only shows its own stock
+- Joined with `public.portal_kodemix` to get article metadata (tipe, gender, series)
+
+**Columns (Added 2026-01-31):**
+- `tipe` - Product type (e.g., Fashion, Jepit)
+- `gender` - Target gender (e.g., MEN, LADIES, BOYS, GIRLS, BABY)
+- `series` - Product series (e.g., CLASSIC, ONYX, SLIDE)
 
 ## DNPB Matching Logic
 
@@ -204,6 +210,8 @@ Run in order:
 6. `006_create_tables_in_correct_schema.sql`
 7. `007_add_dnpb_columns.sql`
 8. `008_update_master_mutasi_whs_dnpb_logic.sql`
+9. `009_update_master_mutasi_whs_ro_ongoing.sql`
+10. `010_add_article_metadata_to_master_mutasi_whs.sql` ← NEW (adds tipe, gender, series)
 
 ## File Structure
 ```
@@ -226,6 +234,7 @@ components/
 ├── RequestForm.tsx
 ├── ROProcess.tsx
 ├── SettingsPage.tsx
+├── WHStockPage.tsx      ← NEW (WH Stock browser)
 └── ui/
 
 lib/
@@ -266,9 +275,9 @@ supabase/
 - [x] Unsaved changes warnings
 - [x] Authentication (Phase 1 - Basic auth)
 - [x] Logout functionality
+- [x] Alter master_mutasi_whs VIEW (add tipe, gender, series from public.portal_kodemix)
+- [x] WH Stock page (replaces SKU catalog) with search & filter
 - [ ] Authentication (Phase 2 - Role-based access)
-- [ ] Alter master_mutasi_whs (add tipe, gender, series from portal_kodemix)
-- [ ] WH Stock page (replaces SKU catalog)
 - [ ] Push notifications
 - [ ] Offline sync
 

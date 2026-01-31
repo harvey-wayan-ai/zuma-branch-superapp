@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-02-01  
-**Current Version:** v1.0.0  
+**Last Updated:** 2026-01-31  
+**Current Version:** v1.1.0  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -39,20 +39,30 @@
 - [x] Fixed +/- quantity buttons (type conversion bug)
 - [x] Improved button visibility and responsiveness
 
+### WH Stock Page (NEW - 2026-01-31)
+- [x] **WH Stock Page** replaces empty SKU tab
+- [x] Search by code, name, tipe, gender, or series
+- [x] Warehouse filter (All, DDD, LJBB, MBB, UBB)
+- [x] Article cards with metadata tags (tipe, gender, series)
+- [x] Color-coded stock badges per warehouse
+- [x] master_mutasi_whs VIEW updated with tipe, gender, series from public.portal_kodemix
+
 ---
 
 ## 🚧 REMAINING TASKS
 
 ### High Priority (Next)
-- [ ] **Alter master_mutasi_whs table**
-  - Add columns: `tipe`, `gender`, `series`
-  - Join with `portal_kodemix` table
-  - Update API routes
-  - Update frontend display
+- [x] ~~**Alter master_mutasi_whs VIEW**~~ ✅ DONE (2026-01-31)
+  - Added columns: `tipe`, `gender`, `series`
+  - Joined with `public.portal_kodemix` (kode column)
+  - Updated /api/articles to return new fields
+  - Migration: `010_add_article_metadata_to_master_mutasi_whs.sql`
   
-- [ ] **WH Stock Page** (replaces empty SKU tab)
-  - Display warehouse stock with new columns
-  - Search/filter functionality
+- [x] ~~**WH Stock Page**~~ ✅ DONE (2026-01-31)
+  - Created `components/WHStockPage.tsx`
+  - Replaced empty SKU placeholder in MainLayout
+  - Search/filter by code, name, tipe, gender, series
+  - Warehouse filter buttons (All, DDD, LJBB, MBB, UBB)
 
 ### Medium Priority
 - [ ] **Authentication Phase 2**
@@ -126,27 +136,14 @@
 
 ## 🎯 IMMEDIATE NEXT STEPS
 
-1. **Alter master_mutasi_whs table:**
-   ```sql
-   -- Add new columns
-   ALTER TABLE branch_super_app_clawdbot.master_mutasi_whs
-   ADD COLUMN tipe VARCHAR(50),
-   ADD COLUMN gender VARCHAR(20),
-   ADD COLUMN series VARCHAR(50);
-   
-   -- Join with portal_kodemix to populate
-   UPDATE branch_super_app_clawdbot.master_mutasi_whs m
-   SET 
-     tipe = p.tipe,
-     gender = p.gender,
-     series = p.series
-   FROM branch_super_app_clawdbot.portal_kodemix p
-   WHERE m."Kode Artikel" = p.kode_artikel;
-   ```
+1. **Authentication Phase 2:** Implement role-based access control (RBAC)
+   - Create user_roles table
+   - Add roles: AS, WH SPV, WH Admin, WH Helper
+   - Role-specific permissions and UI
 
-2. **Update API:** Modify `/api/articles` to return new fields
+2. **Push Notifications:** PWA push for RO status changes
 
-3. **Create WH Stock Page:** Replace empty SKU tab with stock browser
+3. **Offline Sync:** Queue actions when offline, sync when back online
 
 ---
 
