@@ -489,21 +489,22 @@ export default function RequestForm() {
             </div>
             <div className="divide-y divide-gray-100">
             {articles.map((article) => {
-              const totalRequested = article.boxes_ddd + article.boxes_ljbb + article.boxes_mbb + article.boxes_ubb;
-              const stockStatus = getStockStatusColor(totalRequested, article.warehouse_stock?.total_available || 0);
-              const stockBadgeColor = stockStatus === 'green' ? 'bg-green-100 text-green-700' : 
-                                      stockStatus === 'yellow' ? 'bg-yellow-100 text-yellow-700' : 
-                                      'bg-red-100 text-red-700';
-              
-              return (
-                <div key={article.id} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs text-gray-500 font-mono">{article.code}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${stockBadgeColor}`}>
-                          {article.warehouse_stock?.total_available || 0} available
-                        </span>
+              const retailAvailable = (article.warehouse_stock?.ddd_available || 0) + (article.warehouse_stock?.ljbb_available || 0);
+               const totalRequested = article.boxes_ddd + article.boxes_ljbb;
+               const stockStatus = getStockStatusColor(totalRequested, retailAvailable);
+               const stockBadgeColor = stockStatus === 'green' ? 'bg-green-100 text-green-700' :
+                                       stockStatus === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                                       'bg-red-100 text-red-700';
+
+               return (
+                 <div key={article.id} className="p-4">
+                   <div className="flex items-start justify-between mb-2">
+                     <div className="flex-1">
+                       <div className="flex items-center gap-2">
+                         <p className="text-xs text-gray-500 font-mono">{article.code}</p>
+                         <span className={`text-[10px] px-2 py-0.5 rounded-full ${stockBadgeColor}`}>
+                           {retailAvailable} available
+                         </span>
                       </div>
                       <p className="text-sm font-medium text-gray-900">{article.name}</p>
                     </div>
