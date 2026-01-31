@@ -102,11 +102,7 @@ LEFT JOIN ljbb_manual lt ON b."Kode Artikel"::text = lt."Artikel"::text AND b."E
 LEFT JOIN mbb_manual mt ON b."Kode Artikel"::text = mt."Artikel"::text AND b."Entitas" = 'MBB'
 LEFT JOIN ro_totals ro ON b."Kode Artikel"::text = ro.article_code::text
 -- Join with portal_kodemix to get tipe, gender, series
-LEFT JOIN (
-    SELECT DISTINCT ON (kode) kode, tipe, gender, series
-    FROM public.portal_kodemix
-    ORDER BY kode
-) pk ON b."Kode Artikel"::text = pk.kode::text;
+LEFT JOIN branch_super_app_clawdbot.portal_kodemix pk ON b."Kode Artikel"::text = pk.kode_artikel::text;
 
 -- Add comment explaining the join
 COMMENT ON VIEW branch_super_app_clawdbot.master_mutasi_whs IS 'Master warehouse stock view with RO ongoing allocations and article metadata (tipe, gender, series from portal_kodemix)';

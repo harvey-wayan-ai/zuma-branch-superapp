@@ -1,8 +1,11 @@
--- Migration: Add tipe, gender, series columns to master_mutasi_whs VIEW
--- Date: 2026-01-31
--- Purpose: Join with portal_kodemix to get article metadata (tipe, gender, series)
--- Join key: "Kode Artikel" from master_base = kode_artikel from portal_kodemix
+const { createClient } = require('@supabase/supabase-js');
 
+const supabaseUrl = 'https://rwctwnzckyepiwcufdlw.supabase.co';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3Y3R3bnpja3llcGl3Y3VmZGx3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTU3MDI5MywiZXhwIjoyMDc1MTQ2MjkzfQ.0amj_ztVNgHZdU-LAfk-QvDQATGy-dVezEg6HYHLrec';
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const sql = `
 DROP VIEW IF EXISTS branch_super_app_clawdbot.master_mutasi_whs;
 
 CREATE VIEW branch_super_app_clawdbot.master_mutasi_whs AS
@@ -58,7 +61,6 @@ SELECT b."Entitas",
     b."Kode Artikel",
     b."Nama Artikel",
     b."Tier",
-    -- New columns from portal_kodemix
     pk.tipe,
     pk.gender,
     pk.series,
@@ -101,12 +103,24 @@ LEFT JOIN ddd_manual dt ON b."Kode Artikel"::text = dt."Artikel"::text AND b."En
 LEFT JOIN ljbb_manual lt ON b."Kode Artikel"::text = lt."Artikel"::text AND b."Entitas" = 'LJBB'
 LEFT JOIN mbb_manual mt ON b."Kode Artikel"::text = mt."Artikel"::text AND b."Entitas" = 'MBB'
 LEFT JOIN ro_totals ro ON b."Kode Artikel"::text = ro.article_code::text
--- Join with portal_kodemix to get tipe, gender, series
-LEFT JOIN (
-    SELECT DISTINCT ON (kode) kode, tipe, gender, series
-    FROM public.portal_kodemix
-    ORDER BY kode
-) pk ON b."Kode Artikel"::text = pk.kode::text;
+LEFT JOIN branch_super_app_clawdbot.portal_kodemix pk ON b."Kode Artikel"::text = pk.kode_artikel::text;
+`;
 
--- Add comment explaining the join
-COMMENT ON VIEW branch_super_app_clawdbot.master_mutasi_whs IS 'Master warehouse stock view with RO ongoing allocations and article metadata (tipe, gender, series from portal_kodemix)';
+async function executeMigration() {
+  console.log('Executing migration...');
+  
+  // Supabase JS client doesn't support raw SQL execution directly
+  // We need to use the REST API with rpc or create a function
+  // Let's try using the pg_execute function if it exists
+  
+  const { data, error } = await supabase.rpc('exec_sql', { sql });
+  
+  if (error) {
+    console.error('Error executing migration:', error);
+    process.exit(1);
+  }
+  
+  console.log('Migration executed successfully:', data);
+}
+
+executeMigration();

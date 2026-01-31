@@ -1,8 +1,19 @@
--- Migration: Add tipe, gender, series columns to master_mutasi_whs VIEW
--- Date: 2026-01-31
--- Purpose: Join with portal_kodemix to get article metadata (tipe, gender, series)
--- Join key: "Kode Artikel" from master_base = kode_artikel from portal_kodemix
+const { Client } = require('pg');
 
+// Supabase connection using the pooled connection string format
+// Format: postgresql://postgres:[PASSWORD]@db.[PROJECT_REF].supabase.co:5432/postgres
+const client = new Client({
+  host: 'db.rwctwnzckyepiwcufdlw.supabase.co',
+  port: 5432,
+  database: 'postgres',
+  user: 'postgres',
+  password: '', // We need the database password, not the service role key
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+const sql = `
 DROP VIEW IF EXISTS branch_super_app_clawdbot.master_mutasi_whs;
 
 CREATE VIEW branch_super_app_clawdbot.master_mutasi_whs AS
@@ -58,7 +69,6 @@ SELECT b."Entitas",
     b."Kode Artikel",
     b."Nama Artikel",
     b."Tier",
-    -- New columns from portal_kodemix
     pk.tipe,
     pk.gender,
     pk.series,
@@ -101,12 +111,25 @@ LEFT JOIN ddd_manual dt ON b."Kode Artikel"::text = dt."Artikel"::text AND b."En
 LEFT JOIN ljbb_manual lt ON b."Kode Artikel"::text = lt."Artikel"::text AND b."Entitas" = 'LJBB'
 LEFT JOIN mbb_manual mt ON b."Kode Artikel"::text = mt."Artikel"::text AND b."Entitas" = 'MBB'
 LEFT JOIN ro_totals ro ON b."Kode Artikel"::text = ro.article_code::text
--- Join with portal_kodemix to get tipe, gender, series
-LEFT JOIN (
-    SELECT DISTINCT ON (kode) kode, tipe, gender, series
-    FROM public.portal_kodemix
-    ORDER BY kode
-) pk ON b."Kode Artikel"::text = pk.kode::text;
+LEFT JOIN branch_super_app_clawdbot.portal_kodemix pk ON b."Kode Artikel"::text = pk.kode_artikel::text;
+`;
 
--- Add comment explaining the join
-COMMENT ON VIEW branch_super_app_clawdbot.master_mutasi_whs IS 'Master warehouse stock view with RO ongoing allocations and article metadata (tipe, gender, series from portal_kodemix)';
+async function executeMigration() {
+  console.log('Connecting to database...');
+  
+  try {
+    await client.connect();
+    console.log('Connected successfully');
+    
+    console.log('Executing migration...');
+    await client.query(sql);
+    console.log('Migration executed successfully!');
+    
+    await client.end();
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+}
+
+executeMigration();
