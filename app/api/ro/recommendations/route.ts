@@ -44,8 +44,8 @@ export async function GET(request: Request) {
     }
 
     // Fetch stock data from master_mutasi_whs using "Kode Artikel"
-    // Join key: "Article Mix" from ro_recommendations = "Kode Artikel" from master_mutasi_whs
-    const articleCodes = recs.map((r: any) => r['Article Mix']);
+    // Join key: "kode kecil" from ro_recommendations = "Kode Artikel" from master_mutasi_whs
+    const articleCodes = recs.map((r: any) => r['kode kecil']);
     const { data: stock, error: stockError } = await supabase
       .from('master_mutasi_whs')
       .select('*')
@@ -58,10 +58,10 @@ export async function GET(request: Request) {
     const stockMap = new Map((stock || []).map((s: any) => [s['Kode Artikel'], s]));
 
     const transformedData = recs.map((rec: any) => {
-      const stockData = stockMap.get(rec['Article Mix']);
+      const stockData = stockMap.get(rec['kode kecil']);
       const tier = rec['Tier'] || 99;
       return {
-        article_code: rec['Article Mix'],
+        article_code: rec['kode kecil'],
         article_name: rec['Article'],
         suggested_boxes: rec['Recommendation (box)'] || 0,
         total_recommendation: rec['Total Recommendation'] || 0,
