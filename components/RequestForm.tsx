@@ -200,6 +200,13 @@ export default function RequestForm() {
     setArticles(prev => prev.filter((item) => item.id !== id));
   }, []);
 
+  const clearAllArticles = useCallback(() => {
+    if (articles.length === 0) return;
+    if (!confirm(`Clear all ${articles.length} articles from the order?`)) return;
+    setArticles([]);
+    toast.info('All articles cleared');
+  }, [articles.length]);
+
   const updateWarehouseQty = useCallback((id: string, warehouse: 'ddd' | 'ljbb' | 'mbb' | 'ubb', delta: number) => {
     setArticles(prev => prev.map((item) => {
       if (item.id !== id) return item;
@@ -470,7 +477,17 @@ export default function RequestForm() {
             <p className="text-gray-400 text-xs">Click AUTO for recommendations or + Add to select articles</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <>
+            <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex justify-end">
+              <button
+                onClick={clearAllArticles}
+                className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" />
+                Clear All
+              </button>
+            </div>
+            <div className="divide-y divide-gray-100">
             {articles.map((article) => {
               const totalRequested = article.boxes_ddd + article.boxes_ljbb + article.boxes_mbb + article.boxes_ubb;
               const stockStatus = getStockStatusColor(totalRequested, article.warehouse_stock?.total_available || 0);
@@ -499,20 +516,44 @@ export default function RequestForm() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-1">
-                      <span className="text-blue-700">DDD:</span>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => updateWarehouseQty(article.id, 'ddd', -1)} disabled={article.boxes_ddd <= 0} className="w-5 h-5 rounded bg-blue-100 text-blue-700 disabled:opacity-50">-</button>
-                        <span className="w-6 text-center font-medium">{article.boxes_ddd}</span>
-                        <button onClick={() => updateWarehouseQty(article.id, 'ddd', 1)} disabled={article.boxes_ddd >= article.warehouse_stock.ddd_available} className="w-5 h-5 rounded bg-blue-100 text-blue-700 disabled:opacity-50">+</button>
+                    <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-2">
+                      <span className="text-blue-700 font-medium">DDD:</span>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => updateWarehouseQty(article.id, 'ddd', -1)} 
+                          disabled={article.boxes_ddd <= 0} 
+                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm">{article.boxes_ddd}</span>
+                        <button 
+                          onClick={() => updateWarehouseQty(article.id, 'ddd', 1)} 
+                          disabled={article.boxes_ddd >= article.warehouse_stock.ddd_available} 
+                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-1">
-                      <span className="text-purple-700">LJBB:</span>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)} disabled={article.boxes_ljbb <= 0} className="w-5 h-5 rounded bg-purple-100 text-purple-700 disabled:opacity-50">-</button>
-                        <span className="w-6 text-center font-medium">{article.boxes_ljbb}</span>
-                        <button onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)} disabled={article.boxes_ljbb >= article.warehouse_stock.ljbb_available} className="w-5 h-5 rounded bg-purple-100 text-purple-700 disabled:opacity-50">+</button>
+                    <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-2">
+                      <span className="text-purple-700 font-medium">LJBB:</span>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)} 
+                          disabled={article.boxes_ljbb <= 0} 
+                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm">{article.boxes_ljbb}</span>
+                        <button 
+                          onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)} 
+                          disabled={article.boxes_ljbb >= article.warehouse_stock.ljbb_available} 
+                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -523,6 +564,7 @@ export default function RequestForm() {
               );
             })}
           </div>
+        </>
         )}
       </div>
 
