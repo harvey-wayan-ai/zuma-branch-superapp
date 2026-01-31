@@ -264,10 +264,11 @@ supabase/
 - [x] Toast notifications (sonner)
 - [x] Confirmation dialogs for destructive actions
 - [x] Unsaved changes warnings
+- [x] Authentication (Phase 1 - Basic auth)
+- [ ] Authentication (Phase 2 - Role-based access)
 - [ ] SKU product catalog
 - [ ] Push notifications
 - [ ] Offline sync
-- [ ] Authentication
 
 ---
 
