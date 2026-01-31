@@ -53,6 +53,9 @@ export async function GET(request: Request) {
         articleMap.set(code, {
           code: code,
           name: row['Nama Artikel'],
+          tipe: row['tipe'],
+          gender: row['gender'],
+          series: row['series'],
           ddd: 0,
           ljbb: 0,
           mbb: 0,
@@ -71,6 +74,9 @@ export async function GET(request: Request) {
     const transformedData = Array.from(articleMap.values()).map((article: any) => ({
       code: article.code,
       name: article.name,
+      tipe: article.tipe,
+      gender: article.gender,
+      series: article.series,
       warehouse_stock: {
         ddd_available: article.ddd,
         ljbb_available: article.ljbb,

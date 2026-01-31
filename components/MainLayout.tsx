@@ -5,6 +5,7 @@ import BottomNavigation from '@/components/BottomNavigation';
 import ROPage from '@/components/ROPage';
 import SettingsPage from '@/components/SettingsPage';
 import HomePage from '@/components/HomePage';
+import WHStockPage from '@/components/WHStockPage';
 import { Home, Search, ShoppingCart, User, Plus, Settings } from 'lucide-react';
 
 type TabId = 'home' | 'sku' | 'action' | 'ro' | 'profile';
@@ -17,17 +18,7 @@ export default function MainLayout() {
       case 'home':
         return <HomePage />;
       case 'sku':
-        return (
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-[#0D3B2E]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-12 h-12 text-[#0D3B2E]" />
-              </div>
-              <h2 className="text-2xl font-bold text-[#0D3B2E] mb-2">SKU</h2>
-              <p className="text-gray-500">Product Information</p>
-            </div>
-          </div>
-        );
+        return <WHStockPage />;
       case 'action':
         return (
           <div className="flex flex-col items-center justify-center h-full">
