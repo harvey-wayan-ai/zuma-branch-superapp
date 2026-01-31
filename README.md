@@ -261,6 +261,9 @@ supabase/
 - [x] Sales analytics dashboard
 - [x] Supabase integration
 - [x] Vercel deployment
+- [x] Toast notifications (sonner)
+- [x] Confirmation dialogs for destructive actions
+- [x] Unsaved changes warnings
 - [ ] SKU product catalog
 - [ ] Push notifications
 - [ ] Offline sync
