@@ -1095,3 +1095,73 @@ QUEUE → APPROVED → PICKING → PICK_VERIFIED → DNPB_PROCESS → READY_TO_S
 **Code Quality:**
 - [ ] Consolidate duplicate Supabase client (stores/route.ts)
 - [ ] Use Zod for input validation
+
+---
+
+## SESSION UPDATE - 2026-01-31 (UX Improvements)
+
+### ✅ TOAST NOTIFICATIONS IMPLEMENTED
+
+**Library:** `sonner` (lightweight toast library for Next.js)
+
+**Changes:**
+- Added `sonner` package dependency
+- Added `<Toaster />` component to `app/layout.tsx`
+- Replaced all 16 `alert()` calls with appropriate toast types
+
+**Toast Types Used:**
+- `toast.success()` - RO submitted, status updated, changes saved
+- `toast.error()` - API errors, validation failures
+- `toast.warning()` - DNPB required, select store first
+- `toast.info()` - No recommendations found, order completed
+
+**Files Modified:**
+- `app/layout.tsx` - Added Toaster component
+- `components/RequestForm.tsx` - 8 alerts → toasts
+- `components/ROProcess.tsx` - 8 alerts → toasts
+
+### ✅ CONFIRMATION DIALOGS ADDED
+
+**Using:** Browser native `confirm()` for simplicity
+
+**Added to:**
+1. **Article removal** (RequestForm.tsx)
+   - "Remove this article from the order?"
+
+2. **Status progression** (ROProcess.tsx)
+   - "Advance status to '[Next Status]'?"
+
+### ✅ UNSAVED CHANGES WARNINGS ADDED
+
+**ROProcess.tsx:**
+1. **Back to RO Detail** (from articles view)
+   - Warns if `editedArticles` has pending changes
+   - "You have unsaved changes. Discard them?"
+
+2. **Back to List** (from RO detail)
+   - Warns if DNPB input has unsaved changes
+   - "You have unsaved DNPB. Discard it?"
+
+### 📦 COMMITS
+
+| Commit | Description |
+|--------|-------------|
+| `be61428` | feat: Add toast notifications and confirmation dialogs |
+| `00563a0` | docs: Update audit report and roadmap with UX improvements |
+
+### 📋 UPDATED CHECKLISTS
+
+**UX Improvements (From Audit):**
+- [x] Replace alert() with toast notifications (16 instances) ✅
+- [x] Add confirmation dialogs for destructive actions ✅
+- [x] Add unsaved changes warnings ✅
+- [ ] Add loading states for store dropdown
+
+**Remaining Items:**
+- [ ] Authentication/Authorization
+- [ ] SKU product catalog page
+- [ ] Push notifications
+- [ ] Offline sync
+- [ ] Accessibility improvements (aria-labels, focus indicators)
+
+---
