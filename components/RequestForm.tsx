@@ -178,15 +178,12 @@ export default function RequestForm() {
   }, [availableArticles, articles]);
 
   const addArticle = useCallback((article: AvailableArticle) => {
-    const dddStock = article.warehouse_stock.ddd_available || 0;
-    const ljbbStock = article.warehouse_stock.ljbb_available || 0;
-    
     const newItem: ArticleItem = {
       id: `${article.code}-${Date.now()}`,
       code: article.code,
       name: article.name,
-      boxes_ddd: Math.min(1, dddStock),
-      boxes_ljbb: dddStock >= 1 ? 0 : Math.min(1, ljbbStock),
+      boxes_ddd: 1,
+      boxes_ljbb: 0,
       boxes_mbb: 0,
       boxes_ubb: 0,
       warehouse_stock: article.warehouse_stock,
@@ -211,10 +208,9 @@ export default function RequestForm() {
     setArticles(prev => prev.map((item) => {
       if (item.id !== id) return item;
       const key = `boxes_${warehouse}` as keyof ArticleItem;
-      const stockKey = `${warehouse}_available` as keyof typeof item.warehouse_stock;
       const current = item[key] as number;
-      const max = item.warehouse_stock[stockKey];
-      const newVal = Math.max(0, Math.min(current + delta, max));
+      // Allow unlimited quantity - no stock cap
+      const newVal = Math.max(0, current + delta);
       return { ...item, [key]: newVal };
     }));
   }, []);
@@ -232,10 +228,7 @@ export default function RequestForm() {
     return 'green';
   };
 
-  const hasZeroStockItems = articles.some(a => 
-    (a.boxes_ddd + a.boxes_ljbb + a.boxes_mbb + a.boxes_ubb) > 0 && 
-    (a.warehouse_stock.ddd_available + a.warehouse_stock.ljbb_available) === 0
-  );
+
 
   const handleSubmit = async () => {
     setSubmitError(null);
@@ -530,8 +523,7 @@ export default function RequestForm() {
                         <span className="w-8 text-center font-bold text-sm">{article.boxes_ddd}</span>
                         <button
                           onClick={() => updateWarehouseQty(article.id, 'ddd', 1)}
-                          disabled={article.boxes_ddd >= Number(article.warehouse_stock?.ddd_available || 0)}
-                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           +
                         </button>
@@ -550,8 +542,7 @@ export default function RequestForm() {
                         <span className="w-8 text-center font-bold text-sm">{article.boxes_ljbb}</span>
                         <button
                           onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)}
-                          disabled={article.boxes_ljbb >= Number(article.warehouse_stock?.ljbb_available || 0)}
-                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 flex items-center justify-center text-sm font-bold transition-colors"
                         >
                           +
                         </button>
@@ -666,8 +657,7 @@ export default function RequestForm() {
                       <button
                         key={article.code}
                         onClick={() => addArticle(article)}
-                        disabled={article.warehouse_stock?.total_available === 0}
-                        className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -681,11 +671,7 @@ export default function RequestForm() {
                             DDD: {article.warehouse_stock?.ddd_available || 0} | LJBB: {article.warehouse_stock?.ljbb_available || 0}
                           </p>
                         </div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                          article.warehouse_stock?.total_available === 0 
-                            ? 'bg-gray-100 text-gray-400' 
-                            : 'bg-gray-100 group-hover:bg-[#00D084] group-hover:text-white'
-                        }`}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-gray-100 group-hover:bg-[#00D084] group-hover:text-white">
                           <Plus className="w-4 h-4" />
                         </div>
                       </button>
@@ -720,7 +706,7 @@ export default function RequestForm() {
       {/* Submit Button */}
       <Button
         onClick={handleSubmit}
-        disabled={!selectedStore || articles.length === 0 || isSubmitting || hasZeroStockItems}
+        disabled={!selectedStore || articles.length === 0 || isSubmitting}
         className="w-full bg-[#00D084] hover:bg-[#00B874] text-white py-6 text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (

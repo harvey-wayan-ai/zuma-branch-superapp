@@ -54,35 +54,7 @@ export async function POST(request: Request) {
       }])
     );
 
-    const validationErrors: string[] = [];
-    for (const article of articles) {
-      const stock = stockMap.get(article.code);
-      const requestedDdd = article.boxes_ddd || 0;
-      const requestedLjbb = article.boxes_ljbb || 0;
-      const totalRequested = article.boxes || (requestedDdd + requestedLjbb);
-      
-      if (!stock) {
-        validationErrors.push(`Article ${article.code} not found in stock database.`);
-        continue;
-      }
-      
-      if (requestedDdd > stock.ddd) {
-        validationErrors.push(`DDD: Only ${stock.ddd} available for ${article.code}, requested ${requestedDdd}.`);
-      }
-      if (requestedLjbb > stock.ljbb) {
-        validationErrors.push(`LJBB: Only ${stock.ljbb} available for ${article.code}, requested ${requestedLjbb}.`);
-      }
-      if (totalRequested > stock.total) {
-        validationErrors.push(`Total: Only ${stock.total} available for ${article.code}, requested ${totalRequested}.`);
-      }
-    }
 
-    if (validationErrors.length > 0) {
-      return NextResponse.json(
-        { success: false, error: validationErrors.join('\n') },
-        { status: 400 }
-      );
-    }
 
     const { data: roIdResult, error: roIdError } = await supabase
       .rpc('generate_ro_id');
