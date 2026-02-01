@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-01-31  
-**Current Version:** v1.1.0  
+**Last Updated:** 2026-02-01  
+**Current Version:** v1.2.0  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -38,6 +38,7 @@
 - [x] Clear All button in Request Form
 - [x] Fixed +/- quantity buttons (type conversion bug)
 - [x] Improved button visibility and responsiveness
+- [x] **Relaxed stock validation** - Users can request even when DDD/LJBB shows 0 stock
 
 ### WH Stock Page (NEW - 2026-01-31)
 - [x] **WH Stock Page** replaces empty SKU tab
@@ -46,6 +47,13 @@
 - [x] Article cards with metadata tags (tipe, gender, series)
 - [x] Color-coded stock badges per warehouse
 - [x] master_mutasi_whs VIEW updated with tipe, gender, series from public.portal_kodemix
+
+### Stock Validation Update (2026-02-01)
+- [x] **Removed strict stock validation** - Users can now submit ROs even when DDD/LJBB shows 0 stock
+- [x] Updated `/api/ro/submit` - Removed server-side stock cap validation
+- [x] Updated `RequestForm` - Removed quantity caps and disabled states based on stock
+- [x] Stock display still shows available quantities for reference (informational only)
+- Reason: Warehouse stock data may not always be accurate, allowing operational flexibility
 
 ---
 
@@ -157,5 +165,5 @@
 ---
 
 **Status:** Ready for next development session  
-**Last Deployment:** 2026-01-31  
+**Last Deployment:** 2026-02-01  
 **Health:** ✅ All systems operational
