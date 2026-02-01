@@ -14,7 +14,7 @@ interface BottomNavProps {
 export default function BottomNavigation({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
     { id: 'home' as TabId, label: 'Home', icon: Home },
-    { id: 'sku' as TabId, label: 'SKU', icon: Search },
+    { id: 'sku' as TabId, label: 'WH Stock', icon: Search },
     { id: 'action' as TabId, label: '', icon: Plus, isCenter: true },
     { id: 'ro' as TabId, label: 'RO', icon: ShoppingCart },
     { id: 'profile' as TabId, label: 'Settings', icon: Settings },
