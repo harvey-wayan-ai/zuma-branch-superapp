@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
 **Last Updated:** 2026-02-01  
-**Current Version:** v1.2.0  
+**Current Version:** v1.2.1  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -40,7 +40,21 @@
 - [x] Improved button visibility and responsiveness
 - [x] **Relaxed stock validation** - Users can request even when DDD/LJBB shows 0 stock
 
-### WH Stock Page (NEW - 2026-01-31)
+### WH Stock Page v2 - Real-Time Dashboard (2026-02-01)
+- [x] **Tab renamed** from "SKU" to "WH Stock"
+- [x] **Real-time warehouse dashboard** pulling from `master_mutasi_whs`
+- [x] **Key Metrics Cards:**
+  - Total Articles (unique SKU count)
+  - Total Stock (boxes + pairs conversion)
+  - Available Stock (after RO allocations)
+  - RO Ongoing (boxes allocated)
+- [x] **Stock by Warehouse** breakdown with progress bars (DDD, LJBB, MBB, UBB)
+- [x] **Gender breakdown** section
+- [x] **Low Stock Alerts** (items with <10 boxes)
+- [x] Created `/api/dashboard` endpoint for aggregated warehouse data
+- [x] Home page preserved with original dummy sales data (as intended)
+
+### WH Stock Page v1 (2026-01-31)
 - [x] **WH Stock Page** replaces empty SKU tab
 - [x] Search by code, name, tipe, gender, or series
 - [x] Warehouse filter (All, DDD, LJBB, MBB, UBB)
@@ -111,6 +125,7 @@
 **API Endpoints:**
 - GET /api/articles
 - GET /api/stores
+- GET /api/dashboard (warehouse overview data)
 - POST /api/update-ro
 - GET /api/ro/recommendations
 - POST /api/ro/submit
@@ -164,6 +179,6 @@
 
 ---
 
-**Status:** Ready for next development session  
-**Last Deployment:** 2026-02-01  
+**Status:** Ready for user testing  
+**Last Deployment:** 2026-02-01 (v1.2.1 - WH Stock Dashboard)  
 **Health:** ✅ All systems operational
