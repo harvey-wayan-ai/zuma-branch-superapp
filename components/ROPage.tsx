@@ -130,11 +130,14 @@ function DashboardContent() {
   };
 
   const fetchRODetail = async (roId: string) => {
+    console.log('Fetching RO detail for:', roId);
     setIsLoadingDetail(true);
     try {
       const res = await fetch(`/api/ro/process?roId=${roId}`);
       const json = await res.json();
+      console.log('API response:', json);
       if (json.success && json.data && json.data.length > 0) {
+        console.log('Setting selected RO:', json.data[0]);
         setSelectedRO(json.data[0]);
         setShowDetailModal(true);
       } else {

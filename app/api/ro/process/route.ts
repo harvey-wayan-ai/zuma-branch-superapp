@@ -18,6 +18,8 @@ export async function GET(request: Request) {
     const status = searchParams.get('status');
     const roId = searchParams.get('roId');
 
+    console.log('API received roId:', roId);
+
     let query = supabase
       .from('ro_process')
       .select('*')
@@ -25,6 +27,7 @@ export async function GET(request: Request) {
 
     if (roId) {
       query = query.eq('ro_id', roId);
+      console.log('Filtering by ro_id:', roId);
     }
 
     if (status && status !== 'ALL') {
@@ -32,6 +35,8 @@ export async function GET(request: Request) {
     }
 
     const { data, error } = await query;
+
+    console.log('Query returned rows:', data?.length || 0);
 
     if (error) throw error;
 
