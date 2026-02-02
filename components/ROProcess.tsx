@@ -482,41 +482,40 @@ export default function ROProcess() {
 
   const saveArticleChanges = async () => {
     if (!selectedRO || Object.keys(editedArticles).length === 0) return;
-    
+
     setIsSaving(true);
     try {
-      const updatePromises = Object.entries(editedArticles).map(async ([articleCode, values]) => {
-        const res = await fetch('/api/ro/articles', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            roId: selectedRO.id,
-            articleCode,
-            dddBoxes: values.ddd,
-            ljbbBoxes: values.ljbb,
-          })
-        });
-        const result = await res.json();
-        return { articleCode, success: result.success, error: result.error };
+      const updates = Object.entries(editedArticles).map(([articleCode, values]) => ({
+        articleCode,
+        dddBoxes: values.ddd,
+        ljbbBoxes: values.ljbb,
+      }));
+
+      const res = await fetch('/api/ro/articles/batch', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roId: selectedRO.id,
+          updates,
+        })
       });
 
-      const results = await Promise.all(updatePromises);
-      const errors = results.filter(r => !r.success);
-      
-      if (errors.length > 0) {
-        toast.error(`Failed to update: ${errors.map(e => e.articleCode).join(', ')}`);
+      const result = await res.json();
+
+      if (!result.success) {
+        const failedCodes = result.failedUpdates?.map((e: { articleCode: string }) => e.articleCode).join(', ') || 'unknown';
+        toast.error(`Failed to update: ${failedCodes}`);
+        return;
       }
-      
+
       setEditedArticles({});
       const freshData = await fetchROData();
-      
-      if (errors.length === 0) {
-        toast.success('Changes saved successfully');
-        if (freshData.length > 0) {
-          const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
-          if (updatedRO) {
-            setSelectedRO(updatedRO);
-          }
+
+      toast.success('Changes saved successfully');
+      if (freshData.length > 0) {
+        const updatedRO = freshData.find(ro => ro.id === selectedRO.id);
+        if (updatedRO) {
+          setSelectedRO(updatedRO);
         }
       }
     } catch (error) {

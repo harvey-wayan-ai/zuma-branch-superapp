@@ -93,18 +93,22 @@ export default function RequestForm() {
   }, []);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     if (showArticleSelector) {
-      fetchArticles();
+      fetchArticles(abortController.signal);
     }
+    
+    return () => abortController.abort();
   }, [showArticleSelector, searchQuery]);
 
-  const fetchArticles = async () => {
+  const fetchArticles = async (signal?: AbortSignal) => {
     setIsLoadingArticles(true);
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('q', searchQuery);
       
-      const response = await fetch(`/api/articles?${params.toString()}`);
+      const response = await fetch(`/api/articles?${params.toString()}`, { signal });
       const result = await response.json();
       
       if (result.success) {
@@ -113,6 +117,9 @@ export default function RequestForm() {
         console.error('Error fetching articles:', result.error);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('Error fetching articles:', error);
     } finally {
       setIsLoadingArticles(false);

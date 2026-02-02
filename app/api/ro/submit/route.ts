@@ -54,7 +54,33 @@ export async function POST(request: Request) {
       }])
     );
 
+    const validationErrors: string[] = [];
+    for (const article of articles) {
+      const stock = stockMap.get(article.code);
+      const requestedDDD = article.boxes_ddd || 0;
+      const requestedLJBB = article.boxes_ljbb || 0;
+      const requestedTotal = requestedDDD + requestedLJBB;
 
+      if (!stock) {
+        validationErrors.push(`${article.code}: Stock data not found`);
+        continue;
+      }
+
+      const availableTotal = stock.ddd + stock.ljbb;
+
+      if (requestedTotal > availableTotal) {
+        validationErrors.push(
+          `${article.code}: Insufficient stock. Requested: ${requestedTotal} boxes (DDD: ${requestedDDD}, LJBB: ${requestedLJBB}), Available: ${availableTotal} boxes (DDD: ${stock.ddd}, LJBB: ${stock.ljbb})`
+        );
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'Stock validation failed', details: validationErrors },
+        { status: 400 }
+      );
+    }
 
     const { data: roIdResult, error: roIdError } = await supabase
       .rpc('generate_ro_id');

@@ -19,12 +19,10 @@ export async function GET(request: Request) {
     let stockQuery = supabase.schema('branch_super_app_clawdbot').from('master_mutasi_whs').select('*');
 
     if (query) {
-      const sanitized = query
-        .replace(/\\/g, '\\\\')
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_')
-        .replace(/'/g, "''");
-      stockQuery = stockQuery.or(`Kode Artikel.ilike.%${sanitized}%,Nama Artikel.ilike.%${sanitized}%`);
+      const searchPattern = `%${query}%`;
+      stockQuery = stockQuery.or(
+        `Kode Artikel.ilike.${searchPattern},Nama Artikel.ilike.${searchPattern}`
+      );
     }
 
     const { data: articles, error: articlesError } = await stockQuery
