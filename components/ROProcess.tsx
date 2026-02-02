@@ -459,6 +459,27 @@ export default function ROProcess() {
     }));
   }, [selectedRO, editedArticles]);
 
+  const setArticleQty = useCallback((articleCode: string, field: 'ddd' | 'ljbb', value: number) => {
+    if (!selectedRO) return;
+    const article = selectedRO.articles.find(a => a.kodeArtikel === articleCode);
+    if (!article) return;
+    
+    const edited = editedArticles[article.kodeArtikel];
+    const current = {
+      ddd: edited?.ddd ?? article.dddBoxes,
+      ljbb: edited?.ljbb ?? article.ljbbBoxes,
+    };
+    const sanitizedValue = Math.max(0, Math.floor(value) || 0);
+    
+    setEditedArticles(prev => ({
+      ...prev,
+      [articleCode]: {
+        ...current,
+        [field]: sanitizedValue,
+      }
+    }));
+  }, [selectedRO, editedArticles]);
+
   const saveArticleChanges = async () => {
     if (!selectedRO || Object.keys(editedArticles).length === 0) return;
     
@@ -576,15 +597,27 @@ export default function ROProcess() {
                       <td className="py-3 px-2 text-center font-medium text-gray-900">{values.ddd + values.ljbb}</td>
                       <td className="py-2 px-1 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', -1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">-</button>
-                          <span className="min-w-[24px] text-blue-700 font-medium">{values.ddd}</span>
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', -1)} disabled={values.ddd <= 0} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
+                          <input
+                            type="number"
+                            min="0"
+                            value={values.ddd}
+                            onChange={(e) => setArticleQty(article.kodeArtikel, 'ddd', parseInt(e.target.value) || 0)}
+                            className="w-10 h-6 text-center text-blue-700 font-medium text-xs bg-white border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
                           <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', 1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">+</button>
                         </div>
                       </td>
                       <td className="py-2 px-1 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', -1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">-</button>
-                          <span className="min-w-[24px] text-purple-700 font-medium">{values.ljbb}</span>
+                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', -1)} disabled={values.ljbb <= 0} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
+                          <input
+                            type="number"
+                            min="0"
+                            value={values.ljbb}
+                            onChange={(e) => setArticleQty(article.kodeArtikel, 'ljbb', parseInt(e.target.value) || 0)}
+                            className="w-10 h-6 text-center text-purple-700 font-medium text-xs bg-white border border-purple-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
                           <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', 1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">+</button>
                         </div>
                       </td>
