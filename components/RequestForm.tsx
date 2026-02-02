@@ -639,15 +639,10 @@ export default function RequestForm() {
                        </button>
                      </div>
                    )}
-                    <div className="text-xs text-gray-500 mt-1">
-                      <span className="text-blue-600">DDD: {getPendingValue(article, 'ddd')}</span>
+                    <div className="text-xs text-gray-400 mt-1">
+                      <span className="text-blue-500">Stock DDD: {article.warehouse_stock?.ddd_available || 0}</span>
                       <span className="mx-1">|</span>
-                      <span className="text-purple-600">LJBB: {getPendingValue(article, 'ljbb')}</span>
-                      <span className="mx-1">|</span>
-                      <span className="font-medium">Total: {getPendingValue(article, 'ddd') + getPendingValue(article, 'ljbb')}</span>
-                      {hasPendingChanges(article) && (
-                        <span className="text-orange-500 ml-1">(pending)</span>
-                      )}
+                      <span className="text-purple-500">Stock LJBB: {article.warehouse_stock?.ljbb_available || 0}</span>
                     </div>
                 </div>
               );

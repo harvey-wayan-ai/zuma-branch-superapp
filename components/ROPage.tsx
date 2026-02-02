@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShoppingCart, RefreshCw } from 'lucide-react';
+import { ShoppingCart, RefreshCw, X, Download, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequestForm from './RequestForm';
 import ROProcess from './ROProcess';
+import { toast } from 'sonner';
 
 interface DashboardStats {
   totalRO: number;
@@ -18,6 +19,28 @@ interface ROItem {
   store: string;
   box: number;
   status: string;
+}
+
+interface ROArticle {
+  kodeArtikel: string;
+  namaArtikel: string;
+  boxesRequested: number;
+  dddBoxes: number;
+  ljbbBoxes: number;
+}
+
+interface RODetail {
+  id: string;
+  store: string;
+  createdAt: string;
+  currentStatus: string;
+  dnpbNumber: string | null;
+  totalBoxes: number;
+  totalArticles: number;
+  dddBoxes: number;
+  ljbbBoxes: number;
+  notes?: string;
+  articles: ROArticle[];
 }
 
 type SubTab = 'dashboard' | 'request' | 'process';
@@ -46,7 +69,7 @@ export default function ROPage() {
 
   return (
     <div className="h-full">
-      {/* Top Sub-Tabs - Simple text style with separators */}
+      {}
       <div className="bg-white px-4 py-3 sticky top-0 z-10">
         <div className="flex items-center justify-center">
           {subTabs.map((tab, index) => {
@@ -74,7 +97,7 @@ export default function ROPage() {
         </div>
       </div>
 
-      {/* Sub-Tab Content */}
+      {}
       <div className="px-4 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {renderSubContent()}
       </div>
@@ -86,6 +109,9 @@ function DashboardContent() {
   const [stats, setStats] = useState<DashboardStats>({ totalRO: 0, queued: 0, totalBoxes: 0, totalPairs: 0 });
   const [roData, setRoData] = useState<ROItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRO, setSelectedRO] = useState<RODetail | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -101,6 +127,57 @@ function DashboardContent() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const fetchRODetail = async (roId: string) => {
+    setIsLoadingDetail(true);
+    try {
+      const res = await fetch(`/api/ro/process?roId=${roId}`);
+      const json = await res.json();
+      if (json.success && json.data && json.data.length > 0) {
+        setSelectedRO(json.data[0]);
+        setShowDetailModal(true);
+      } else {
+        toast.error('Failed to load RO detail');
+      }
+    } catch (error) {
+      console.error('Error fetching RO detail:', error);
+      toast.error('Failed to load RO detail');
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
+  const downloadCSV = (ro: RODetail) => {
+    const csvRows = [
+      ['RO_ID', 'Store', 'Status', 'Created_Date', 'DNPB', 'Notes', 'Article_Code', 'Article_Name', 'Box', 'DDD', 'LJBB'],
+      ...ro.articles.map(article => [
+        ro.id,
+        ro.store,
+        ro.currentStatus,
+        ro.createdAt,
+        ro.dnpbNumber || '-',
+        ro.notes || '-',
+        article.kodeArtikel,
+        article.namaArtikel,
+        article.boxesRequested.toString(),
+        article.dddBoxes.toString(),
+        article.ljbbBoxes.toString()
+      ]),
+      ['', '', '', '', '', '', 'TOTAL', '', ro.totalBoxes.toString(), ro.dddBoxes.toString(), ro.ljbbBoxes.toString()]
+    ];
+
+    const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RO-${ro.id}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('CSV downloaded successfully');
   };
 
   useEffect(() => {
@@ -195,7 +272,11 @@ function DashboardContent() {
                 </tr>
               ) : (
                 roData.map((ro) => (
-                  <tr key={ro.id} className="border-b border-gray-50 last:border-0">
+                  <tr 
+                    key={ro.id} 
+                    onClick={() => fetchRODetail(ro.id)}
+                    className="border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
                     <td className="py-3 px-4 font-mono text-gray-700 text-xs">{ro.id}</td>
                     <td className="py-3 px-4 text-gray-900">{ro.store}</td>
                     <td className="py-3 px-4 text-center text-gray-700">{ro.box}</td>
@@ -207,6 +288,141 @@ function DashboardContent() {
           </table>
         </div>
       </div>
+
+      {}
+      {showDetailModal && selectedRO && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col">
+            {}
+            <div className="bg-[#0D3B2E] p-4 text-white">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs opacity-80 font-mono">{selectedRO.id}</p>
+                  <p className="font-semibold">{selectedRO.store}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadCSV(selectedRO)}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-1 text-xs"
+                    title="Download CSV"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">CSV</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setSelectedRO(null);
+                    }}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {}
+            <div className="p-4 bg-gray-50 border-b border-gray-100 space-y-2">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Status:</span>{' '}
+                  <span className="font-medium">{selectedRO.currentStatus}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Created:</span>{' '}
+                  <span className="font-medium">{selectedRO.createdAt}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">DNPB:</span>{' '}
+                  <span className="font-medium">{selectedRO.dnpbNumber || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Articles:</span>{' '}
+                  <span className="font-medium">{selectedRO.totalArticles} items</span>
+                </div>
+              </div>
+              {selectedRO.notes && (
+                <div className="text-sm">
+                  <span className="text-gray-500">Notes:</span>{' '}
+                  <span className="font-medium text-gray-700">{selectedRO.notes}</span>
+                </div>
+              )}
+            </div>
+
+            {}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-gray-500" />
+                  Articles ({selectedRO.articles.length})
+                </h4>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
+                        <th className="py-2 font-medium">Article</th>
+                        <th className="py-2 font-medium text-center w-14">Box</th>
+                        <th className="py-2 font-medium text-center w-14 text-blue-600">DDD</th>
+                        <th className="py-2 font-medium text-center w-14 text-purple-600">LJBB</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedRO.articles.map((article, idx) => (
+                        <tr key={idx} className="border-b border-gray-100 last:border-0">
+                          <td className="py-2">
+                            <p className="font-mono text-xs text-gray-500">{article.kodeArtikel}</p>
+                            <p className="text-gray-900 text-xs truncate max-w-[180px]">{article.namaArtikel}</p>
+                          </td>
+                          <td className="py-2 text-center font-medium">{article.boxesRequested}</td>
+                          <td className="py-2 text-center text-blue-600 font-medium">{article.dddBoxes}</td>
+                          <td className="py-2 text-center text-purple-600 font-medium">{article.ljbbBoxes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-gray-50 font-medium border-t-2 border-gray-200">
+                        <td className="py-3 text-gray-700">TOTAL</td>
+                        <td className="py-3 text-center text-gray-900">{selectedRO.totalBoxes}</td>
+                        <td className="py-3 text-center text-blue-700">{selectedRO.dddBoxes}</td>
+                        <td className="py-3 text-center text-purple-700">{selectedRO.ljbbBoxes}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div className="mt-3 text-xs text-gray-500 text-center">
+                  Total: {selectedRO.totalBoxes} boxes = {selectedRO.totalBoxes * 12} pairs
+                </div>
+              </div>
+            </div>
+
+            {}
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedRO(null);
+                }}
+                className="w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {}
+      {isLoadingDetail && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-4 flex items-center gap-3">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#00D084]" />
+            <span className="text-sm text-gray-600">Loading detail...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
