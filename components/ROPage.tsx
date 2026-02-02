@@ -163,8 +163,7 @@ function DashboardContent() {
         article.boxesRequested.toString(),
         article.dddBoxes.toString(),
         article.ljbbBoxes.toString()
-      ]),
-      ['', '', '', '', '', '', 'TOTAL', '', ro.totalBoxes.toString(), ro.dddBoxes.toString(), ro.ljbbBoxes.toString()]
+      ])
     ];
 
     const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');

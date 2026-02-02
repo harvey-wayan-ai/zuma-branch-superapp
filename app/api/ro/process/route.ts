@@ -16,11 +16,16 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const roId = searchParams.get('roId');
 
     let query = supabase
       .from('ro_process')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (roId) {
+      query = query.eq('ro_id', roId);
+    }
 
     if (status && status !== 'ALL') {
       query = query.eq('status', status);
