@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Minus, Trash2, Package, Store, Send, Search, X, Loader2 } from 'lucide-react';
+import { Plus, Minus, Trash2, Package, Store, Send, Search, X, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
@@ -62,6 +62,8 @@ export default function RequestForm() {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingStores, setIsLoadingStores] = useState(true);
+  
+  const [pendingEdits, setPendingEdits] = useState<Record<string, { ddd: number; ljbb: number }>>({});
   
   const [availableArticles, setAvailableArticles] = useState<AvailableArticle[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -204,16 +206,59 @@ export default function RequestForm() {
     toast.info('All articles cleared');
   }, [articles.length]);
 
-  const updateWarehouseQty = useCallback((id: string, warehouse: 'ddd' | 'ljbb' | 'mbb' | 'ubb', delta: number) => {
-    setArticles(prev => prev.map((item) => {
-      if (item.id !== id) return item;
-      const key = `boxes_${warehouse}` as keyof ArticleItem;
-      const current = item[key] as number;
-      // Allow unlimited quantity - no stock cap
-      const newVal = Math.max(0, current + delta);
-      return { ...item, [key]: newVal };
+  const initPendingEdit = useCallback((article: ArticleItem) => {
+    if (!pendingEdits[article.id]) {
+      setPendingEdits(prev => ({
+        ...prev,
+        [article.id]: { ddd: article.boxes_ddd, ljbb: article.boxes_ljbb }
+      }));
+    }
+  }, [pendingEdits]);
+
+  const updatePendingQty = useCallback((id: string, warehouse: 'ddd' | 'ljbb', value: number) => {
+    const sanitizedValue = Math.max(0, Math.floor(value) || 0);
+    setPendingEdits(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [warehouse]: sanitizedValue
+      }
     }));
   }, []);
+
+  const applyPendingEdit = useCallback((id: string) => {
+    const pending = pendingEdits[id];
+    if (!pending) return;
+    
+    setArticles(prev => prev.map((item) => {
+      if (item.id !== id) return item;
+      return {
+        ...item,
+        boxes_ddd: pending.ddd,
+        boxes_ljbb: pending.ljbb,
+      };
+    }));
+    
+    setPendingEdits(prev => {
+      const newEdits = { ...prev };
+      delete newEdits[id];
+      return newEdits;
+    });
+    
+    toast.success('Quantity updated');
+  }, [pendingEdits]);
+
+  const hasPendingChanges = useCallback((article: ArticleItem) => {
+    const pending = pendingEdits[article.id];
+    if (!pending) return false;
+    return pending.ddd !== article.boxes_ddd || pending.ljbb !== article.boxes_ljbb;
+  }, [pendingEdits]);
+
+  const getPendingValue = useCallback((article: ArticleItem, warehouse: 'ddd' | 'ljbb') => {
+    const pending = pendingEdits[article.id];
+    if (pending) return pending[warehouse];
+    return warehouse === 'ddd' ? article.boxes_ddd : article.boxes_ljbb;
+  }, [pendingEdits]);
 
   const { totalBoxes, totalPairs } = useMemo(() => {
     const boxes = articles.reduce((sum, item) => 
@@ -509,49 +554,97 @@ export default function RequestForm() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-2">
-                      <span className="text-blue-700 font-medium">DDD:</span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateWarehouseQty(article.id, 'ddd', -1)}
-                          disabled={article.boxes_ddd <= 0}
-                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center font-bold text-sm">{article.boxes_ddd}</span>
-                        <button
-                          onClick={() => updateWarehouseQty(article.id, 'ddd', 1)}
-                          className="w-7 h-7 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 flex items-center justify-center text-sm font-bold transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-2">
-                      <span className="text-purple-700 font-medium">LJBB:</span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateWarehouseQty(article.id, 'ljbb', -1)}
-                          disabled={article.boxes_ljbb <= 0}
-                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center font-bold text-sm">{article.boxes_ljbb}</span>
-                        <button
-                          onClick={() => updateWarehouseQty(article.id, 'ljbb', 1)}
-                          className="w-7 h-7 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 flex items-center justify-center text-sm font-bold transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Total: {article.boxes_ddd + article.boxes_ljbb} boxes = {(article.boxes_ddd + article.boxes_ljbb) * 12} pairs
-                  </div>
+<div className="grid grid-cols-2 gap-2 text-xs">
+                     <div className="flex items-center justify-between bg-blue-50 rounded px-2 py-2">
+                       <span className="text-blue-700 font-medium">DDD:</span>
+                       <div className="flex items-center gap-1">
+                         <button
+                           onClick={() => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ddd', getPendingValue(article, 'ddd') - 1);
+                           }}
+                           disabled={getPendingValue(article, 'ddd') <= 0}
+                           className="w-6 h-6 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                         >
+                           -
+                         </button>
+                         <input
+                           type="number"
+                           min="0"
+                           value={getPendingValue(article, 'ddd')}
+                           onChange={(e) => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ddd', parseInt(e.target.value) || 0);
+                           }}
+                           onFocus={() => initPendingEdit(article)}
+                           className="w-12 h-6 text-center font-bold text-sm bg-white border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                         />
+                         <button
+                           onClick={() => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ddd', getPendingValue(article, 'ddd') + 1);
+                           }}
+                           className="w-6 h-6 rounded bg-blue-200 text-blue-800 hover:bg-blue-300 flex items-center justify-center text-sm font-bold transition-colors"
+                         >
+                           +
+                         </button>
+                       </div>
+                     </div>
+                     <div className="flex items-center justify-between bg-purple-50 rounded px-2 py-2">
+                       <span className="text-purple-700 font-medium">LJBB:</span>
+                       <div className="flex items-center gap-1">
+                         <button
+                           onClick={() => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ljbb', getPendingValue(article, 'ljbb') - 1);
+                           }}
+                           disabled={getPendingValue(article, 'ljbb') <= 0}
+                           className="w-6 h-6 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-sm font-bold transition-colors"
+                         >
+                           -
+                         </button>
+                         <input
+                           type="number"
+                           min="0"
+                           value={getPendingValue(article, 'ljbb')}
+                           onChange={(e) => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ljbb', parseInt(e.target.value) || 0);
+                           }}
+                           onFocus={() => initPendingEdit(article)}
+                           className="w-12 h-6 text-center font-bold text-sm bg-white border border-purple-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                         />
+                         <button
+                           onClick={() => {
+                             initPendingEdit(article);
+                             updatePendingQty(article.id, 'ljbb', getPendingValue(article, 'ljbb') + 1);
+                           }}
+                           className="w-6 h-6 rounded bg-purple-200 text-purple-800 hover:bg-purple-300 flex items-center justify-center text-sm font-bold transition-colors"
+                         >
+                           +
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {hasPendingChanges(article) && (
+                     <div className="mt-2 flex items-center justify-end gap-2">
+                       <span className="text-xs text-orange-600">Unsaved changes</span>
+                       <button
+                         onClick={() => applyPendingEdit(article.id)}
+                         className="flex items-center gap-1 px-3 py-1 bg-[#00D084] hover:bg-[#00B874] text-white text-xs font-medium rounded-lg transition-colors"
+                       >
+                         <Check className="w-3 h-3" />
+                         Apply
+                       </button>
+                     </div>
+                   )}
+<div className="text-xs text-gray-500 mt-1">
+                     Total: {getPendingValue(article, 'ddd') + getPendingValue(article, 'ljbb')} boxes = {(getPendingValue(article, 'ddd') + getPendingValue(article, 'ljbb')) * 12} pairs
+                     {hasPendingChanges(article) && (
+                       <span className="text-orange-500 ml-1">(pending)</span>
+                     )}
+                   </div>
                 </div>
               );
             })}
