@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-02-01  
-**Current Version:** v1.2.1  
+**Last Updated:** 2026-02-02  
+**Current Version:** v1.2.2  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -39,6 +39,16 @@
 - [x] Fixed +/- quantity buttons (type conversion bug)
 - [x] Improved button visibility and responsiveness
 - [x] **Relaxed stock validation** - Users can request even when DDD/LJBB shows 0 stock
+
+### Editable Quantity Input (2026-02-02)
+- [x] **RequestForm:** Added input fields where users can type integers directly
+- [x] **RequestForm:** Added "Apply" button that appears when there are pending changes
+- [x] **RequestForm:** Changes only save to state after clicking Apply (confirmation step)
+- [x] **RequestForm:** Shows "Unsaved changes" indicator
+- [x] **ROProcess:** Replaced static quantity spans with editable input fields for DDD/LJBB columns
+- [x] **ROProcess:** Added `setArticleQty` function for direct integer value input
+- [x] **ROProcess:** Disabled (-) button when quantity is 0
+- [x] Maintained +/- buttons for quick increment/decrement on both components
 
 ### WH Stock Page v2 - Real-Time Dashboard (2026-02-01)
 - [x] **Tab renamed** from "SKU" to "WH Stock"
@@ -180,5 +190,5 @@
 ---
 
 **Status:** Ready for user testing  
-**Last Deployment:** 2026-02-01 (v1.2.1 - WH Stock Dashboard)  
+**Last Deployment:** 2026-02-02 (v1.2.2 - Editable Quantity Inputs)  
 **Health:** ✅ All systems operational
