@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Clock, 
-  CheckCircle2, 
-  Package, 
-  Truck, 
+import {
+  Clock,
+  CheckCircle2,
+  Package,
+  Truck,
   Home,
   ChevronRight,
   RefreshCw,
-  Database
+  Database,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -528,6 +529,38 @@ export default function ROProcess() {
 
   const hasChanges = Object.keys(editedArticles).length > 0;
 
+  const downloadCSV = () => {
+    if (!selectedRO) return;
+
+    const csvRows = [
+      ['RO_ID', 'Store', 'Status', 'Created_Date', 'DNPB', 'Article_Code', 'Article_Name', 'Box', 'DDD', 'LJBB'],
+      ...selectedRO.articles.map(article => [
+        selectedRO.id,
+        selectedRO.store,
+        selectedRO.currentStatus,
+        selectedRO.createdAt,
+        selectedRO.dnpbNumber || '-',
+        article.kodeArtikel,
+        article.namaArtikel,
+        (article.dddBoxes + article.ljbbBoxes).toString(),
+        article.dddBoxes.toString(),
+        article.ljbbBoxes.toString()
+      ])
+    ];
+
+    const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RO-${selectedRO.id}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('CSV downloaded successfully');
+  };
+
   const renderArticlesView = () => {
     if (!selectedRO) return null;
 
@@ -561,16 +594,26 @@ export default function ROProcess() {
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900">Article Breakdown</h3>
-            {hasChanges && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={saveArticleChanges}
-                disabled={isSaving}
-                className="px-4 py-1.5 bg-[#00D084] text-white text-sm font-medium rounded-lg hover:bg-[#00B874] disabled:opacity-50 flex items-center gap-2"
+                onClick={downloadCSV}
+                className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                title="Download CSV"
               >
-                {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
-                Save Changes
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">CSV</span>
               </button>
-            )}
+              {hasChanges && (
+                <button
+                  onClick={saveArticleChanges}
+                  disabled={isSaving}
+                  className="px-4 py-1.5 bg-[#00D084] text-white text-sm font-medium rounded-lg hover:bg-[#00B874] disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : null}
+                  Save Changes
+                </button>
+              )}
+            </div>
           </div>
           
           <div className="overflow-x-auto">
