@@ -529,6 +529,8 @@ export default function ROProcess() {
 
   const hasChanges = Object.keys(editedArticles).length > 0;
 
+  const isEditable = selectedRO ? !['READY_TO_SHIP', 'IN_DELIVERY', 'ARRIVED', 'COMPLETED'].includes(selectedRO.currentStatus) : false;
+
   const downloadCSV = () => {
     if (!selectedRO) return;
 
@@ -603,7 +605,7 @@ export default function ROProcess() {
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">CSV</span>
               </button>
-              {hasChanges && (
+              {isEditable && hasChanges && (
                 <button
                   onClick={saveArticleChanges}
                   disabled={isSaving}
@@ -639,28 +641,40 @@ export default function ROProcess() {
                       <td className="py-3 px-2 text-center font-medium text-gray-900">{values.ddd + values.ljbb}</td>
                       <td className="py-2 px-1 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', -1)} disabled={values.ddd <= 0} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
-                          <input
-                            type="number"
-                            min="0"
-                            value={values.ddd}
-                            onChange={(e) => setArticleQty(article.kodeArtikel, 'ddd', parseInt(e.target.value) || 0)}
-                            className="w-10 h-6 text-center text-blue-700 font-medium text-xs bg-white border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', 1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">+</button>
+                          {isEditable ? (
+                            <>
+                              <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', -1)} disabled={values.ddd <= 0} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
+                              <input
+                                type="number"
+                                min="0"
+                                value={values.ddd}
+                                onChange={(e) => setArticleQty(article.kodeArtikel, 'ddd', parseInt(e.target.value) || 0)}
+                                className="w-10 h-6 text-center text-blue-700 font-medium text-xs bg-white border border-blue-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button onClick={() => updateArticleQty(article.kodeArtikel, 'ddd', 1)} className="w-6 h-6 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-bold">+</button>
+                            </>
+                          ) : (
+                            <span className="w-10 h-6 text-center text-blue-700 font-medium text-xs bg-gray-100 border border-gray-200 rounded flex items-center justify-center">{values.ddd}</span>
+                          )}
                         </div>
                       </td>
                       <td className="py-2 px-1 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', -1)} disabled={values.ljbb <= 0} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
-                          <input
-                            type="number"
-                            min="0"
-                            value={values.ljbb}
-                            onChange={(e) => setArticleQty(article.kodeArtikel, 'ljbb', parseInt(e.target.value) || 0)}
-                            className="w-10 h-6 text-center text-purple-700 font-medium text-xs bg-white border border-purple-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', 1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">+</button>
+                          {isEditable ? (
+                            <>
+                              <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', -1)} disabled={values.ljbb <= 0} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold">-</button>
+                              <input
+                                type="number"
+                                min="0"
+                                value={values.ljbb}
+                                onChange={(e) => setArticleQty(article.kodeArtikel, 'ljbb', parseInt(e.target.value) || 0)}
+                                className="w-10 h-6 text-center text-purple-700 font-medium text-xs bg-white border border-purple-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button onClick={() => updateArticleQty(article.kodeArtikel, 'ljbb', 1)} className="w-6 h-6 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-bold">+</button>
+                            </>
+                          ) : (
+                            <span className="w-10 h-6 text-center text-purple-700 font-medium text-xs bg-gray-100 border border-gray-200 rounded flex items-center justify-center">{values.ljbb}</span>
+                          )}
                         </div>
                       </td>
                     </tr>
