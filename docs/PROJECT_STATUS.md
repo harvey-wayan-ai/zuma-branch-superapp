@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-02-02  
-**Current Version:** v1.2.2  
+**Last Updated:** 2026-02-04  
+**Current Version:** v1.2.4  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -49,6 +49,14 @@
 - [x] **ROProcess:** Added `setArticleQty` function for direct integer value input
 - [x] **ROProcess:** Disabled (-) button when quantity is 0
 - [x] Maintained +/- buttons for quick increment/decrement on both components
+
+### RO Process - CSV Download & Readonly Quantities (2026-02-04)
+- [x] **ROProcess:** Added CSV download button in Article Breakdown (layer 3)
+- [x] **ROProcess:** Quantity editing locked after READY_TO_SHIP status
+  - Editable: QUEUE, APPROVED, PICKING, PICK_VERIFIED, DNPB_PROCESS
+  - Readonly: READY_TO_SHIP, IN_DELIVERY, ARRIVED, COMPLETED
+- [x] **ROProcess:** Save Changes button hidden when RO is not editable
+- [x] CSV format: RO_ID, Store, Status, Created_Date, DNPB, Article_Code, Article_Name, Box, DDD, LJBB
 
 ### WH Stock Page v2 - Real-Time Dashboard (2026-02-01)
 - [x] **Tab renamed** from "SKU" to "WH Stock"
@@ -190,5 +198,5 @@
 ---
 
 **Status:** Ready for user testing  
-**Last Deployment:** 2026-02-02 (v1.2.2 - Editable Quantity Inputs)  
+**Last Deployment:** 2026-02-04 (v1.2.4 - RO Process CSV Download & Readonly Quantities)  
 **Health:** ✅ All systems operational
