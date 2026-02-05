@@ -56,7 +56,51 @@ export async function POST(request: Request) {
         message: "Banding notice created successfully"
       })
     } else {
-      const { error: updateError } = await supabase
+      const { data: receiptData, error: receiptError } = await supabase
+        .schema("branch_super_app_clawdbot")
+        .from("ro_receipt")
+        .select("article_code, fisik, pairs_per_box, boxes_ddd, boxes_ljbb")
+        .eq("ro_id", ro_id)
+
+      if (receiptError) {
+        console.error("Receipt fetch error:", receiptError)
+        return NextResponse.json(
+          { success: false, error: receiptError.message },
+          { status: 500 }
+        )
+      }
+
+      for (const item of receiptData || []) {
+        const fisikBoxes = Math.ceil(item.fisik / item.pairs_per_box)
+        
+        const totalOriginalBoxes = item.boxes_ddd + item.boxes_ljbb
+        let dddBoxes = 0
+        let ljbbBoxes = 0
+        
+        if (totalOriginalBoxes > 0) {
+          const dddRatio = item.boxes_ddd / totalOriginalBoxes
+          dddBoxes = Math.round(fisikBoxes * dddRatio)
+          ljbbBoxes = fisikBoxes - dddBoxes
+        }
+
+        const { error: processUpdateError } = await supabase
+          .schema("branch_super_app_clawdbot")
+          .from("ro_process")
+          .update({ 
+            status: "COMPLETED",
+            boxes_allocated_ddd: dddBoxes,
+            boxes_allocated_ljbb: ljbbBoxes,
+            updated_at: new Date().toISOString()
+          })
+          .eq("ro_id", ro_id)
+          .eq("article_code", item.article_code)
+
+        if (processUpdateError) {
+          console.error("Process update error:", processUpdateError)
+        }
+      }
+
+      const { error: receiptUpdateError } = await supabase
         .schema("branch_super_app_clawdbot")
         .from("ro_receipt")
         .update({ 
@@ -66,17 +110,13 @@ export async function POST(request: Request) {
         })
         .eq("ro_id", ro_id)
 
-      if (updateError) {
-        console.error("Confirmed update error:", updateError)
-        return NextResponse.json(
-          { success: false, error: updateError.message },
-          { status: 500 }
-        )
+      if (receiptUpdateError) {
+        console.error("Receipt update error:", receiptUpdateError)
       }
 
       return NextResponse.json({
         success: true,
-        message: "Discrepancy confirmed and resolved"
+        message: "Discrepancy confirmed - RO marked as COMPLETED with actual received quantities"
       })
     }
   } catch (err) {
