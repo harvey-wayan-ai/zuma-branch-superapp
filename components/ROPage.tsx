@@ -5,6 +5,7 @@ import { ShoppingCart, RefreshCw, X, Download, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequestForm from './RequestForm';
 import ROProcess from './ROProcess';
+import { DNPBErrorContent, DNPBErrorDetailModal } from './DNPBErrorContent';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -47,6 +48,7 @@ type SubTab = 'dashboard' | 'request' | 'process' | 'dnpb-error';
 
 export default function ROPage() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
+  const [selectedDNPBErrorRO, setSelectedDNPBErrorRO] = useState<DNPBErrorRO | null>(null);
 
   const subTabs = [
     { id: 'dashboard' as SubTab, label: 'Dashboard' },
@@ -64,7 +66,7 @@ export default function ROPage() {
       case 'process':
         return <ROProcess />;
       case 'dnpb-error':
-        return <DNPBErrorContent />;
+        return <DNPBErrorContent onSelectRO={setSelectedDNPBErrorRO} />;
       default:
         return null;
     }
@@ -428,17 +430,13 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
+      <DNPBErrorDetailModal
+        ro={selectedDNPBErrorRO}
+        onClose={() => setSelectedDNPBErrorRO(null)}
+      />
     </div>
   );
 }
 
-function DNPBErrorContent() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center p-8">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">DNPB Error</h3>
-        <p className="text-gray-500">This feature is coming soon.</p>
-      </div>
-    </div>
-  );
-}
+
