@@ -106,6 +106,11 @@ export default function ROPage() {
       <div className="px-4 pb-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {renderSubContent()}
       </div>
+
+      <DNPBErrorDetailModal
+        ro={selectedDNPBErrorRO}
+        onClose={() => setSelectedDNPBErrorRO(null)}
+      />
     </div>
   );
 }
@@ -430,11 +435,6 @@ function DashboardContent() {
           </div>
         </div>
       )}
-
-      <DNPBErrorDetailModal
-        ro={selectedDNPBErrorRO}
-        onClose={() => setSelectedDNPBErrorRO(null)}
-      />
     </div>
   );
 }
