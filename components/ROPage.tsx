@@ -110,6 +110,24 @@ export default function ROPage() {
       <DNPBErrorDetailModal
         ro={selectedDNPBErrorRO}
         onClose={() => setSelectedDNPBErrorRO(null)}
+        onBanding={async (roId) => {
+          try {
+            const response = await fetch('/api/ro/banding', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ro_id: roId })
+            });
+            const result = await response.json();
+            if (result.success) {
+              toast.success('Banding notice sent to ro-arrive-app');
+            } else {
+              toast.error(result.error || 'Failed to send banding notice');
+            }
+          } catch (err) {
+            toast.error('Failed to send banding notice');
+            throw err;
+          }
+        }}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, ChevronRight, AlertTriangle, CheckCircle2, RefreshCw, X } from "lucide-react"
+import { Package, ChevronRight, AlertTriangle, CheckCircle2, RefreshCw, X, ShieldAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -157,12 +157,29 @@ export function DNPBErrorContent({ onSelectRO }: DNPBErrorContentProps) {
 interface DNPBErrorDetailModalProps {
   ro: DNPBErrorRO | null
   onClose: () => void
+  onBanding?: (roId: string) => void
 }
 
-export function DNPBErrorDetailModal({ ro, onClose }: DNPBErrorDetailModalProps) {
+export function DNPBErrorDetailModal({ ro, onClose, onBanding }: DNPBErrorDetailModalProps) {
   if (!ro) return null
 
   const selisihItems = ro.details?.filter((item) => Number(item.selisih) !== 0) || []
+  const [showBandingConfirm, setShowBandingConfirm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleBanding = async () => {
+    if (!onBanding) return
+    setIsSubmitting(true)
+    try {
+      await onBanding(ro.ro_id)
+      setShowBandingConfirm(false)
+      onClose()
+    } catch (err) {
+      console.error("Banding failed:", err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const getSelisihBadge = (selisih: number | string) => {
     const num = Number(selisih)
@@ -286,15 +303,68 @@ export function DNPBErrorDetailModal({ ro, onClose }: DNPBErrorDetailModalProps)
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+        <div className="p-4 border-t border-gray-100 bg-white shrink-0 space-y-3">
+          {selisihItems.length > 0 && (
+            <button
+              onClick={() => setShowBandingConfirm(true)}
+              disabled={isSubmitting}
+              className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <ShieldAlert className="w-5 h-5" />
+              {isSubmitting ? "Processing..." : "> Banding & Confirmed"}
+            </button>
+          )}
           <button
             onClick={onClose}
-            className="w-full py-3 bg-[#0D3B2E] hover:bg-[#0a2e23] text-white font-bold rounded-xl transition-colors"
+            className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
           >
             Close
           </button>
         </div>
       </div>
+
+      {showBandingConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <ShieldAlert className="w-6 h-6 text-orange-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Banding Confirmation</h3>
+            </div>
+            
+            <div className="space-y-3 text-sm text-gray-600 mb-6">
+              <p>
+                This will send a notice to <strong>ro-arrive-app</strong> that:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Warehouse sent the correct RO quantities</li>
+                <li>SPG/B must re-check the arrived stock</li>
+                <li>Possible miscount or fraud indication</li>
+              </ul>
+              <p className="text-orange-600 font-medium">
+                Are you sure you want to proceed?
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBandingConfirm(false)}
+                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBanding}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-bold rounded-xl transition-colors"
+              >
+                {isSubmitting ? "Processing..." : "Confirm Banding"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
