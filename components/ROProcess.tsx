@@ -28,7 +28,8 @@ interface ROItem {
   store: string;
   createdAt: string;
   currentStatus: ROStatus;
-  dnpbNumber: string | null;
+  dnpbNumberDDD: string | null;
+  dnpbNumberLJBB: string | null;
   totalBoxes: number;
   totalArticles: number;
   dddBoxes: number;
@@ -57,7 +58,7 @@ export default function ROProcess() {
   const [isLoading, setIsLoading] = useState(false);
   const [roData, setRoData] = useState<ROItem[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [dnpbInput, setDnpbInput] = useState('');
+  const [dnpbInputs, setDnpbInputs] = useState<{ ddd: string; ljbb: string }>({ ddd: '', ljbb: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [editedArticles, setEditedArticles] = useState<Record<string, { ddd: number; ljbb: number }>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -67,10 +68,13 @@ export default function ROProcess() {
   }, []);
 
   useEffect(() => {
-    if (selectedRO?.dnpbNumber) {
-      setDnpbInput(selectedRO.dnpbNumber);
+    if (selectedRO) {
+      setDnpbInputs({
+        ddd: selectedRO.dnpbNumberDDD || '',
+        ljbb: selectedRO.dnpbNumberLJBB || ''
+      });
     } else {
-      setDnpbInput('');
+      setDnpbInputs({ ddd: '', ljbb: '' });
     }
   }, [selectedRO?.id]);
 
@@ -241,7 +245,9 @@ export default function ROProcess() {
         {/* Back Button */}
         <button
           onClick={() => {
-            if (dnpbInput && dnpbInput !== selectedRO.dnpbNumber && !confirm('You have unsaved DNPB. Discard it?')) return;
+            const hasUnsavedDDD = selectedRO.dddBoxes > 0 && dnpbInputs.ddd && dnpbInputs.ddd !== selectedRO.dnpbNumberDDD;
+            const hasUnsavedLJBB = selectedRO.ljbbBoxes > 0 && dnpbInputs.ljbb && dnpbInputs.ljbb !== selectedRO.dnpbNumberLJBB;
+            if ((hasUnsavedDDD || hasUnsavedLJBB) && !confirm('You have unsaved DNPB. Discard it?')) return;
             setSelectedRO(null);
             setViewArticles(false);
           }}
@@ -271,20 +277,50 @@ export default function ROProcess() {
         </div>
 
         {selectedRO.currentStatus === 'DNPB_PROCESS' && (
-          <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
-            <label className="block text-sm font-medium text-yellow-800 mb-2">
-              📝 DNPB Number (Required)
-            </label>
-            <input
-              type="text"
-              placeholder="DNPB/DDD/WHS/2026/I/001"
-              value={dnpbInput}
-              onChange={(e) => setDnpbInput(e.target.value)}
-              className="w-full px-4 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
-            />
-            {selectedRO.dnpbNumber && (
-              <p className="mt-2 text-xs text-yellow-700">Current: {selectedRO.dnpbNumber}</p>
+          <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 space-y-4">
+            <p className="text-sm font-medium text-yellow-800">
+              📝 DNPB Numbers (Required)
+            </p>
+            
+            {selectedRO.dddBoxes > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-yellow-700 mb-1">
+                  DNPB DDD
+                </label>
+                <input
+                  type="text"
+                  placeholder="DNPB/DDD/WHS/2026/I/001"
+                  value={dnpbInputs.ddd}
+                  onChange={(e) => setDnpbInputs({ ...dnpbInputs, ddd: e.target.value })}
+                  className="w-full px-4 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                />
+                {selectedRO.dnpbNumberDDD && (
+                  <p className="mt-1 text-xs text-yellow-600">Current: {selectedRO.dnpbNumberDDD}</p>
+                )}
+              </div>
             )}
+            
+            {selectedRO.ljbbBoxes > 0 && (
+              <div>
+                <label className="block text-xs font-medium text-yellow-700 mb-1">
+                  DNPB LJBB
+                </label>
+                <input
+                  type="text"
+                  placeholder="DNPB/LJBB/WHS/2026/I/001"
+                  value={dnpbInputs.ljbb}
+                  onChange={(e) => setDnpbInputs({ ...dnpbInputs, ljbb: e.target.value })}
+                  className="w-full px-4 py-2 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent bg-white"
+                />
+                {selectedRO.dnpbNumberLJBB && (
+                  <p className="mt-1 text-xs text-yellow-600">Current: {selectedRO.dnpbNumberLJBB}</p>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-yellow-600 italic">
+              Format: DNPB/WAREHOUSE/WHS/YEAR/ROMAN/NUMBER
+            </p>
           </div>
         )}
 
@@ -365,9 +401,16 @@ export default function ROProcess() {
               if (!confirm(`Advance status to "${nextStatus.label}"?`)) return;
               
               if (selectedRO.currentStatus === 'DNPB_PROCESS') {
-                const dnpbToSave = dnpbInput || selectedRO.dnpbNumber;
-                if (!dnpbToSave) {
-                  toast.warning('DNPB Number is required before proceeding');
+                const dnpbToSaveDDD = dnpbInputs.ddd || selectedRO.dnpbNumberDDD;
+                const dnpbToSaveLJBB = dnpbInputs.ljbb || selectedRO.dnpbNumberLJBB;
+                
+                if (selectedRO.dddBoxes > 0 && !dnpbToSaveDDD) {
+                  toast.warning('DNPB Number for DDD is required before proceeding');
+                  return;
+                }
+                
+                if (selectedRO.ljbbBoxes > 0 && !dnpbToSaveLJBB) {
+                  toast.warning('DNPB Number for LJBB is required before proceeding');
                   return;
                 }
                 
@@ -376,7 +419,11 @@ export default function ROProcess() {
                   const dnpbRes = await fetch('/api/ro/dnpb', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ roId: selectedRO.id, dnpbNumber: dnpbToSave })
+                    body: JSON.stringify({ 
+                      roId: selectedRO.id, 
+                      dnpbNumberDDD: dnpbToSaveDDD,
+                      dnpbNumberLJBB: dnpbToSaveLJBB
+                    })
                   });
                   const dnpbResult = await dnpbRes.json();
                   if (!dnpbResult.success) {
@@ -403,8 +450,13 @@ export default function ROProcess() {
                 const result = await res.json();
                 
                 if (result.success) {
-                  setSelectedRO({ ...selectedRO, currentStatus: nextStatus.id, dnpbNumber: dnpbInput || selectedRO.dnpbNumber });
-                  setDnpbInput('');
+                  setSelectedRO({ 
+                    ...selectedRO, 
+                    currentStatus: nextStatus.id, 
+                    dnpbNumberDDD: dnpbInputs.ddd || selectedRO.dnpbNumberDDD,
+                    dnpbNumberLJBB: dnpbInputs.ljbb || selectedRO.dnpbNumberLJBB
+                  });
+                  setDnpbInputs({ ddd: '', ljbb: '' });
                   fetchROData();
                   toast.success(`Status updated to ${nextStatus.label}`);
                 } else {
@@ -534,14 +586,17 @@ export default function ROProcess() {
   const downloadCSV = () => {
     if (!selectedRO) return;
 
+    const dnpbDisplay = [selectedRO.dnpbNumberDDD, selectedRO.dnpbNumberLJBB].filter(Boolean).join(', ') || '-';
+
     const csvRows = [
-      ['RO_ID', 'Store', 'Status', 'Created_Date', 'DNPB', 'Article_Code', 'Article_Name', 'Box', 'DDD', 'LJBB'],
+      ['RO_ID', 'Store', 'Status', 'Created_Date', 'DNPB_DDD', 'DNPB_LJBB', 'Article_Code', 'Article_Name', 'Box', 'DDD', 'LJBB'],
       ...selectedRO.articles.map(article => [
         selectedRO.id,
         selectedRO.store,
         selectedRO.currentStatus,
         selectedRO.createdAt,
-        selectedRO.dnpbNumber || '-',
+        selectedRO.dnpbNumberDDD || '-',
+        selectedRO.dnpbNumberLJBB || '-',
         article.kodeArtikel,
         article.namaArtikel,
         (article.dddBoxes + article.ljbbBoxes).toString(),

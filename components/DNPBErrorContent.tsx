@@ -20,7 +20,8 @@ interface DNPBErrorDetail {
 export interface DNPBErrorRO {
   ro_id: string
   store_name: string
-  dnpb_number: string | null
+  dnpb_number_ddd: string | null
+  dnpb_number_ljbb: string | null
   total_items: number
   total_selisih: number
   confirmed_at: string
@@ -103,22 +104,25 @@ export function DNPBErrorContent({ onSelectRO }: DNPBErrorContentProps) {
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
-                {ro.dnpb_number ? (
-                  <>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-gray-900">{ro.dnpb_number}</span>
-                      <span className="text-xs px-2 py-0.5 bg-[#00D084]/10 text-[#0D3B2E] rounded-full font-medium">
-                        {ro.total_items} items
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900 font-mono">{ro.ro_id}</span>
+                  <span className="text-xs px-2 py-0.5 bg-[#00D084]/10 text-[#0D3B2E] rounded-full font-medium">
+                    {ro.total_items} items
+                  </span>
+                </div>
+                
+                {(ro.dnpb_number_ddd || ro.dnpb_number_ljbb) && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {ro.dnpb_number_ddd && (
+                      <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">
+                        DDD: {ro.dnpb_number_ddd}
                       </span>
-                    </div>
-                    <p className="text-xs text-gray-500 font-mono">{ro.ro_id}</p>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-gray-900 font-mono">{ro.ro_id}</span>
-                    <span className="text-xs px-2 py-0.5 bg-[#00D084]/10 text-[#0D3B2E] rounded-full font-medium">
-                      {ro.total_items} items
-                    </span>
+                    )}
+                    {ro.dnpb_number_ljbb && (
+                      <span className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded font-medium">
+                        LJBB: {ro.dnpb_number_ljbb}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -233,10 +237,20 @@ export function DNPBErrorDetailModal({ ro, onClose, onBanding, onConfirmed }: DN
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          {ro.dnpb_number && (
-            <div className="mb-4 bg-white rounded-xl shadow-sm border border-gray-100 p-3">
-              <p className="text-xs text-gray-500 mb-1">DNPB</p>
-              <p className="text-sm text-gray-900 font-medium">{ro.dnpb_number}</p>
+          {(ro.dnpb_number_ddd || ro.dnpb_number_ljbb) && (
+            <div className="mb-4 space-y-2">
+              {ro.dnpb_number_ddd && (
+                <div className="bg-blue-50 rounded-xl border border-blue-100 p-3">
+                  <p className="text-xs text-blue-600 mb-1">DNPB DDD</p>
+                  <p className="text-sm text-gray-900 font-medium">{ro.dnpb_number_ddd}</p>
+                </div>
+              )}
+              {ro.dnpb_number_ljbb && (
+                <div className="bg-purple-50 rounded-xl border border-purple-100 p-3">
+                  <p className="text-xs text-purple-600 mb-1">DNPB LJBB</p>
+                  <p className="text-sm text-gray-900 font-medium">{ro.dnpb_number_ljbb}</p>
+                </div>
+              )}
             </div>
           )}
 
