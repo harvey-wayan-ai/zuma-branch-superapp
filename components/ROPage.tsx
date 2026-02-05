@@ -5,7 +5,7 @@ import { ShoppingCart, RefreshCw, X, Download, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequestForm from './RequestForm';
 import ROProcess from './ROProcess';
-import { DNPBErrorContent, DNPBErrorDetailModal } from './DNPBErrorContent';
+import { DNPBErrorContent, DNPBErrorDetailModal, DNPBErrorRO } from './DNPBErrorContent';
 import { toast } from 'sonner';
 
 interface DashboardStats {

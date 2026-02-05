@@ -17,7 +17,7 @@ interface DNPBErrorDetail {
   notes: string | null
 }
 
-interface DNPBErrorRO {
+export interface DNPBErrorRO {
   ro_id: string
   store_name: string
   dnpb_number: string | null
