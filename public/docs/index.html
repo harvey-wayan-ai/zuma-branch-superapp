@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuma RO PWA - User Role Flowcharts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #0D3B2E;
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            opacity: 0.9;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .nav a {
+            color: #00D084;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #00D084;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #00D084;
+            color: #0D3B2E;
+        }
+        
+        .flowchart-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .flowchart-section h2 {
+            color: #0D3B2E;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #00D084;
+        }
+        
+        .role-header {
+            background: #0D3B2E;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .role-header.as { background: #0284c7; }
+        .role-header.wh-spv { background: #7c3aed; }
+        .role-header.wh-admin { background: #ea580c; }
+        .role-header.wh-helper { background: #059669; }
+        .role-header.spgb { background: #dc2626; }
+        
+        .role-icon {
+            font-size: 2em;
+        }
+        
+        .role-title {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .role-subtitle {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .ascii-art {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre;
+            font-size: 13px;
+            line-height: 1.4;
+            border-left: 4px solid #00D084;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f9f6;
+            border-radius: 8px;
+            border-left: 4px solid #0D3B2E;
+        }
+        
+        .explanation h3 {
+            color: #0D3B2E;
+            margin-bottom: 15px;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+        }
+        
+        .explanation li {
+            margin-bottom: 8px;
+        }
+        
+        .can-do { color: #059669; }
+        .cannot-do { color: #dc2626; }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .app-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .app-zuma { background: #0D3B2E; color: white; }
+        .app-arrive { background: #dc2626; color: white; }
+        
+        .interaction-flow {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #00D084;
+        }
+        
+        .flow-step-number {
+            width: 30px;
+            height: 30px;
+            background: #0D3B2E;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .flow-step-content {
+            flex: 1;
+        }
+        
+        .flow-arrow {
+            text-align: center;
+            color: #0D3B2E;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .highlight {
+            background: #fff59d;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .role-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .role-card {
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+        }
+        
+        .role-card.as { background: #0284c7; }
+        .role-card.wh-spv { background: #7c3aed; }
+        .role-card.wh-admin { background: #ea580c; }
+        .role-card.wh-helper { background: #059669; }
+        .role-card.spgb { background: #dc2626; }
+        
+        .role-card h3 {
+            margin-bottom: 10px;
+        }
+        
+        .role-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏭 Zuma RO PWA - User Role Interactions</h1>
+            <p>Flowcharts organized by user role and their specific interactions</p>
+            <div class="nav">
+                <a href="#overview">Overview</a>
+                <a href="#as">Area Supervisor</a>
+                <a href="#wh-spv">WH Supervisor</a>
+                <a href="#wh-admin">WH Admin</a>
+                <a href="#wh-helper">WH Helper</a>
+                <a href="#spgb">SPG/B</a>
+            </div>
+        </header>
+
+        <!-- ROLE OVERVIEW -->
+        <section id="overview" class="flowchart-section">
+            <h2>👥 Role Overview</h2>
+            <div class="role-summary">
+                <div class="role-card as">
+                    <h3>👤 Area Supervisor</h3>
+                    <p><strong>App:</strong> zuma-ro-pwa<br>
+                    <strong>Main:</strong> Create RO, View Dashboard<br>
+                    <strong>Cannot:</strong> Advance status, DNPB input</p>
+                </div>
+                <div class="role-card wh-spv">
+                    <h3>👔 WH Supervisor</h3>
+                    <p><strong>App:</strong> zuma-ro-pwa<br>
+                    <strong>Main:</strong> Approve, Verify, Banding<br>
+                    <strong>Cannot:</strong> Create RO, Pick items</p>
+                </div>
+                <div class="role-card wh-admin">
+                    <h3>📋 WH Admin</h3>
+                    <p><strong>App:</strong> zuma-ro-pwa<br>
+                    <strong>Main:</strong> DNPB Input, Ready to Ship<br>
+                    <strong>Cannot:</strong> Approve, Banding</p>
+                </div>
+                <div class="role-card wh-helper">
+                    <h3>📦 WH Helper</h3>
+                    <p><strong>App:</strong> zuma-ro-pwa<br>
+                    <strong>Main:</strong> Picking items<br>
+                    <strong>Cannot:</strong> Edit quantities, Advance status</p>
+                </div>
+                <div class="role-card spgb">
+                    <h3>🏪 SPG/B</h3>
+                    <p><strong>App:</strong> ro-arrive-app<br>
+                    <strong>Main:</strong> Receive, Count fisik<br>
+                    <strong>Cannot:</strong> Access zuma-ro-pwa features</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AREA SUPERVISOR -->
+        <section id="as" class="flowchart-section">
+            <div class="role-header as">
+                <span class="role-icon">👤</span>
+                <div>
+                    <div class="role-title">Area Supervisor (AS)</div>
+                    <div class="role-subtitle">Creates ROs and monitors progress <span class="app-badge app-zuma">zuma-ro-pwa</span></div>
+                </div>
+            </div>
+
+            <h3>🔄 AS Interaction Flow</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Login</strong> → Access granted to AS features
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>Home Tab</strong> → View sales dashboard (read-only)
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>RO Tab → RequestForm</strong> → Create new RO
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>Select store from dropdown</li>
+                            <li>Auto-generate article recommendations</li>
+                            <li>Edit quantities (DDD/LJBB boxes)</li>
+                            <li>Submit RO → Status: QUEUE</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>RO Tab → Dashboard</strong> → Track own ROs
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>View status timeline</li>
+                            <li>Cancel RO (if not COMPLETED)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-content">
+                        <strong>WH Stock Tab</strong> → View warehouse stock (read-only)
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>AS Permissions</h3>
+                <ul>
+                    <li class="can-do">✅ <strong>CAN:</strong> Create RO, Cancel RO, View Dashboard, View WH Stock</li>
+                    <li class="cannot-do">❌ <strong>CANNOT:</strong> Advance RO status, Input DNPB, Access DNPB Error tab, Pick items</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- WH SUPERVISOR -->
+        <section id="wh-spv" class="flowchart-section">
+            <div class="role-header wh-spv">
+                <span class="role-icon">👔</span>
+                <div>
+                    <div class="role-title">WH Supervisor (WH SPV)</div>
+                    <div class="role-subtitle">Approves and manages RO workflow <span class="app-badge app-zuma">zuma-ro-pwa</span></div>
+                </div>
+            </div>
+
+            <h3>🔄 WH SPV Interaction Flow</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Login</strong> → Access granted to WH SPV features
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>RO Tab → All ROs</strong> → View all ROs (not just own)
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>Approve RO</strong> → QUEUE → APPROVED
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>Verify Picking</strong> → PICKING → PICK_VERIFIED
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-content">
+                        <strong>DNPB Error Tab</strong> → Handle discrepancies
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li><strong>BANDING:</strong> Send re-check notice → Status: BANDING_SENT</li>
+                            <li><strong>CONFIRMED:</strong> Accept discrepancy → Status: COMPLETED</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>WH SPV Permissions</h3>
+                <ul>
+                    <li class="can-do">✅ <strong>CAN:</strong> View all ROs, Approve, Verify, Send Banding, Confirm discrepancy, Cancel any RO</li>
+                    <li class="cannot-do">❌ <strong>CANNOT:</strong> Create RO, Pick items, Input DNPB</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- WH ADMIN -->
+        <section id="wh-admin" class="flowchart-section">
+            <div class="role-header wh-admin">
+                <span class="role-icon">📋</span>
+                <div>
+                    <div class="role-title">WH Admin</div>
+                    <div class="role-subtitle">Handles DNPB and shipping <span class="app-badge app-zuma">zuma-ro-pwa</span></div>
+                </div>
+            </div>
+
+            <h3>🔄 WH Admin Interaction Flow</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Login</strong> → Access granted to WH Admin features
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>RO Tab → DNPB_PROCESS ROs</strong> → Input DNPB numbers
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>Enter DNPB DDD (if has DDD boxes)</li>
+                            <li>Enter DNPB LJBB (if has LJBB boxes)</li>
+                            <li>System validates against transaction tables</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>Advance Status</strong> → DNPB_PROCESS → READY_TO_SHIP
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>WH Stock Tab</strong> → Monitor warehouse inventory
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>WH Admin Permissions</h3>
+                <ul>
+                    <li class="can-do">✅ <strong>CAN:</strong> Input DNPB numbers, Mark Ready to Ship, View WH Stock</li>
+                    <li class="cannot-do">❌ <strong>CANNOT:</strong> Approve/Verify, Send Banding, Pick items</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- WH HELPER -->
+        <section id="wh-helper" class="flowchart-section">
+            <div class="role-header wh-helper">
+                <span class="role-icon">📦</span>
+                <div>
+                    <div class="role-title">WH Helper</div>
+                    <div class="role-subtitle">Picks items from warehouse <span class="app-badge app-zuma">zuma-ro-pwa</span></div>
+                </div>
+            </div>
+
+            <h3>🔄 WH Helper Interaction Flow</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Login</strong> → Access granted to WH Helper features
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>RO Tab → APPROVED ROs</strong> → View pick list
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>See assigned ROs</li>
+                            <li>View article list with quantities</li>
+                            <li>Read-only (cannot edit)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>Pick Items</strong> → Collect from warehouse locations
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>Mark Complete</strong> → PICKING → PICK_VERIFIED
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>WH Helper Permissions</h3>
+                <ul>
+                    <li class="can-do">✅ <strong>CAN:</strong> View assigned ROs, Pick items, Mark picking complete</li>
+                    <li class="cannot-do">❌ <strong>CANNOT:</strong> Edit quantities, Advance status beyond PICKING, Access DNPB Error</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SPG/B -->
+        <section id="spgb" class="flowchart-section">
+            <div class="role-header spgb">
+                <span class="role-icon">🏪</span>
+                <div>
+                    <div class="role-title">SPG/B (Store Staff)</div>
+                    <div class="role-subtitle">Receives and counts physical stock <span class="app-badge app-arrive">ro-arrive-app</span></div>
+                </div>
+            </div>
+
+            <h3>🔄 SPG/B Interaction Flow (ro-arrive-app)</h3>
+            <div class="interaction-flow">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-content">
+                        <strong>Login</strong> → Access ro-arrive-app (separate app)
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-content">
+                        <strong>Receive Delivery</strong> → RO arrives at store
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>See IN_DELIVERY ROs assigned to store</li>
+                            <li>Mark as ARRIVED</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-content">
+                        <strong>Count Physical Stock</strong> → Compare with shipped quantities
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>Count each article</li>
+                            <li>Input <code>fisik</code> (actual received quantity)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-content">
+                        <strong>System Compares</strong> → Shipped vs Fisik
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li><strong>Match:</strong> RO auto-completes</li>
+                            <li><strong>Discrepancy:</strong> DNPB Error created → WH SPV notified</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="flow-arrow">⬇</div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-content">
+                        <strong>Handle Banding</strong> → If WH SPV sends Banding notice
+                        <ul style="margin-top:8px;margin-left:20px;">
+                            <li>View Banding notice</li>
+                            <li>Re-check physical stock</li>
+                            <li>Update fisik quantities</li>
+                            <li>Resubmit to zuma-ro-pwa</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>SPG/B Permissions</h3>
+                <ul>
+                    <li class="can-do">✅ <strong>CAN:</strong> Receive deliveries, Count physical stock, Input fisik, View Banding notices, Update after re-check</li>
+                    <li class="cannot-do">❌ <strong>CANNOT:</strong> Access zuma-ro-pwa, Create/Edit ROs, Advance warehouse statuses, Send Banding (only receive)</li>
+                </ul>
+                <p style="margin-top:15px;"><strong>⚠️ Critical:</strong> zuma-ro-pwa CANNOT complete RO without SPG/B input from ro-arrive-app!</p>
+            </div>
+        </section>
+
+        <!-- CROSS-APP WORKFLOW -->
+        <section class="flowchart-section">
+            <h2>🔄 Cross-App Workflow: Banding Scenario</h2>
+            <div class="ascii-art">┌─────────────────────────────────────────────────────────────────────────────┐
+│                    BANDING WORKFLOW (Cross-App)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+     zuma-ro-pwa (WH SPV)                    ro-arrive-app (SPG/B)
+            │                                          │
+            │                                          │ 1. RO arrives
+            │                                          │ 2. Count fisik
+            │                                          │ 3. Submit counts
+            │                                          │
+            │◀─────────── fisik data ─────────────────┤
+            │                                          │
+            │ 4. System detects discrepancy            │
+            │    (Shipped ≠ Fisik)                     │
+            │                                          │
+            │ 5. WH SPV sees DNPB Error tab            │
+            │    Clicks BANDING                        │
+            │                                          │
+            │─────────── Banding notice ──────────────▶│
+            │    (ro_process: BANDING_SENT)            │
+            │                                          │
+            │                                          │ 6. SPG/B sees notice
+            │                                          │ 7. Re-check stock
+            │                                          │ 8. Update fisik
+            │                                          │
+            │◀─────────── Updated fisik ──────────────┤
+            │                                          │
+            │ 9. WH SPV reviews                        │
+            │    Clicks CONFIRMED or BANDING again     │
+            │                                          │
+            │    CONFIRMED → COMPLETED                 │
+            │    BANDING → Loop back to step 5         │
+            │                                          │</div>
+
+            <div class="explanation">
+                <h3>Key Points</h3>
+                <ul>
+                    <li><strong>BANDING_SENT</strong> status indicates waiting for SPG/B re-check</li>
+                    <li>SPG/B uses <strong>ro-arrive-app</strong> (different application)</li>
+                    <li>RO cannot complete without SPG/B fisik input</li>
+                    <li>Banding can loop multiple times until resolved</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer style="text-align: center; padding: 30px; color: #666;">
+            <p>Built for Zuma Indonesia | Last Updated: 2026-02-05 | Version 1.2.6</p>
+        </footer>
+    </div>
+</body>
+</html>
