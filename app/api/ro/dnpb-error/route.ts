@@ -24,8 +24,7 @@ export async function GET() {
     }
 
     const { data: roList, error } = await supabase
-      .schema("branch_super_app_clawdbot")
-      .rpc("get_dnpb_error_ro_list")
+      .rpc("get_confirmed_ro_list")
 
     if (error) {
       console.error("Supabase error:", error)
