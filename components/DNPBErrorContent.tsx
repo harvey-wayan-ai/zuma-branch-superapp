@@ -158,13 +158,15 @@ interface DNPBErrorDetailModalProps {
   ro: DNPBErrorRO | null
   onClose: () => void
   onBanding?: (roId: string) => void
+  onConfirmed?: (roId: string) => void
 }
 
-export function DNPBErrorDetailModal({ ro, onClose, onBanding }: DNPBErrorDetailModalProps) {
+export function DNPBErrorDetailModal({ ro, onClose, onBanding, onConfirmed }: DNPBErrorDetailModalProps) {
   if (!ro) return null
 
   const selisihItems = ro.details?.filter((item) => Number(item.selisih) !== 0) || []
   const [showBandingConfirm, setShowBandingConfirm] = useState(false)
+  const [showConfirmedConfirm, setShowConfirmedConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleBanding = async () => {
@@ -176,6 +178,20 @@ export function DNPBErrorDetailModal({ ro, onClose, onBanding }: DNPBErrorDetail
       onClose()
     } catch (err) {
       console.error("Banding failed:", err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleConfirmed = async () => {
+    if (!onConfirmed) return
+    setIsSubmitting(true)
+    try {
+      await onConfirmed(ro.ro_id)
+      setShowConfirmedConfirm(false)
+      onClose()
+    } catch (err) {
+      console.error("Confirmed failed:", err)
     } finally {
       setIsSubmitting(false)
     }
@@ -305,21 +321,25 @@ export function DNPBErrorDetailModal({ ro, onClose, onBanding }: DNPBErrorDetail
 
         <div className="p-4 border-t border-gray-100 bg-white shrink-0 space-y-3">
           {selisihItems.length > 0 && (
-            <button
-              onClick={() => setShowBandingConfirm(true)}
-              disabled={isSubmitting}
-              className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              <ShieldAlert className="w-5 h-5" />
-              {isSubmitting ? "Processing..." : "> Banding & Confirmed"}
-            </button>
+            <>
+              <button
+                onClick={() => setShowBandingConfirm(true)}
+                disabled={isSubmitting}
+                className="w-full py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <ShieldAlert className="w-5 h-5" />
+                {isSubmitting ? "Processing..." : "Banding"}
+              </button>
+              <button
+                onClick={() => setShowConfirmedConfirm(true)}
+                disabled={isSubmitting}
+                className="w-full py-3 bg-[#00D084] hover:bg-[#00B874] disabled:bg-green-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                {isSubmitting ? "Processing..." : "Confirmed"}
+              </button>
+            </>
           )}
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
-          >
-            Close
-          </button>
         </div>
       </div>
 
@@ -360,6 +380,49 @@ export function DNPBErrorDetailModal({ ro, onClose, onBanding }: DNPBErrorDetail
                 className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-bold rounded-xl transition-colors"
               >
                 {isSubmitting ? "Processing..." : "Confirm Banding"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showConfirmedConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Confirmed</h3>
+            </div>
+            
+            <div className="space-y-3 text-sm text-gray-600 mb-6">
+              <p>
+                This will mark the discrepancy as <strong>confirmed/accepted</strong>:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Warehouse acknowledges the discrepancy</li>
+                <li>Stock adjustment will be processed</li>
+                <li>RO will be marked as resolved</li>
+              </ul>
+              <p className="text-green-600 font-medium">
+                Are you sure you want to confirm?
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmedConfirm(false)}
+                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmed}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-[#00D084] hover:bg-[#00B874] disabled:bg-green-400 text-white font-bold rounded-xl transition-colors"
+              >
+                {isSubmitting ? "Processing..." : "Confirm"}
               </button>
             </div>
           </div>

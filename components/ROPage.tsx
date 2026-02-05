@@ -115,7 +115,7 @@ export default function ROPage() {
             const response = await fetch('/api/ro/banding', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ro_id: roId })
+              body: JSON.stringify({ ro_id: roId, action: 'BANDING' })
             });
             const result = await response.json();
             if (result.success) {
@@ -125,6 +125,24 @@ export default function ROPage() {
             }
           } catch (err) {
             toast.error('Failed to send banding notice');
+            throw err;
+          }
+        }}
+        onConfirmed={async (roId) => {
+          try {
+            const response = await fetch('/api/ro/banding', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ro_id: roId, action: 'CONFIRMED' })
+            });
+            const result = await response.json();
+            if (result.success) {
+              toast.success('Discrepancy confirmed and resolved');
+            } else {
+              toast.error(result.error || 'Failed to confirm');
+            }
+          } catch (err) {
+            toast.error('Failed to confirm discrepancy');
             throw err;
           }
         }}
