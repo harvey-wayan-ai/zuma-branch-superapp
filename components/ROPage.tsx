@@ -43,7 +43,7 @@ interface RODetail {
   articles: ROArticle[];
 }
 
-type SubTab = 'dashboard' | 'request' | 'process';
+type SubTab = 'dashboard' | 'request' | 'process' | 'dnpb-error';
 
 export default function ROPage() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
@@ -52,6 +52,7 @@ export default function ROPage() {
     { id: 'dashboard' as SubTab, label: 'Dashboard' },
     { id: 'request' as SubTab, label: 'Request Form' },
     { id: 'process' as SubTab, label: 'RO Process' },
+    { id: 'dnpb-error' as SubTab, label: 'DNPB Error' },
   ];
 
   const renderSubContent = () => {
@@ -62,6 +63,8 @@ export default function ROPage() {
         return <RequestForm />;
       case 'process':
         return <ROProcess />;
+      case 'dnpb-error':
+        return <DNPBErrorContent />;
       default:
         return null;
     }
@@ -425,6 +428,17 @@ function DashboardContent() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function DNPBErrorContent() {
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-8">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">DNPB Error</h3>
+        <p className="text-gray-500">This feature is coming soon.</p>
+      </div>
     </div>
   );
 }
