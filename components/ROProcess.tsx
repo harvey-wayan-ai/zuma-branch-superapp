@@ -37,7 +37,7 @@ interface ROItem {
   articles: ROArticle[];
 }
 
-type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'DNPB_PROCESS' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'COMPLETED';
+type ROStatus = 'QUEUE' | 'APPROVED' | 'PICKING' | 'PICK_VERIFIED' | 'DNPB_PROCESS' | 'READY_TO_SHIP' | 'IN_DELIVERY' | 'ARRIVED' | 'BANDING_SENT' | 'COMPLETED';
 
 const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; description: string }[] = [
   { id: 'QUEUE', label: 'Queue', icon: Clock, description: 'Awaiting approval' },
@@ -48,6 +48,7 @@ const statusFlow: { id: ROStatus; label: string; icon: React.ElementType; descri
   { id: 'READY_TO_SHIP', label: 'Ready', icon: Package, description: 'Ready for dispatch' },
   { id: 'IN_DELIVERY', label: 'Delivery', icon: Truck, description: 'Out for delivery' },
   { id: 'ARRIVED', label: 'Arrived', icon: Home, description: 'Received at store' },
+  { id: 'BANDING_SENT', label: 'Banding', icon: RefreshCw, description: 'Re-check requested' },
   { id: 'COMPLETED', label: 'Completed', icon: CheckCircle2, description: 'Order closed' },
 ];
 
@@ -122,6 +123,8 @@ export default function ROProcess() {
         return 'bg-blue-100 text-blue-700';
       case 'DNPB_PROCESS':
         return 'bg-yellow-100 text-yellow-700';
+      case 'BANDING_SENT':
+        return 'bg-orange-100 text-orange-700';
       case 'QUEUE':
         return 'bg-gray-100 text-gray-600';
       default:

@@ -1,4 +1,7 @@
-# Troubleshooting Guide
+# Troubleshooting Guide - Zuma RO PWA
+
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`APP_LOGIC.md`](./APP_LOGIC.md) - Application flowcharts | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) - Current status
 
 ## Supabase Query Returns Incomplete Data
 

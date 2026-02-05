@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
 **Last Updated:** 2026-02-05  
-**Current Version:** v1.2.5  
+**Current Version:** v1.2.6  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -61,6 +61,10 @@
 ### DNPB Error Tab (2026-02-05)
 - [x] **New Tab:** Added "DNPB Error" tab to RO Page (4th tab)
 - [x] **Copied from ro-arrive-app:** Full implementation mirrored from ro-arrive-app DNPB Error page
+- [x] **⚠️ CRITICAL Dependency:** RO cannot move to COMPLETED without ro-arrive-app action
+  - ro-arrive-app (SPG/B users) inputs fisik (physical) quantities
+  - zuma-ro-pwa (AS/WH users) can only Banding (dispute) or Confirmed (accept)
+  - No ro-arrive-app input = RO stays blocked at ARRIVED status
 - [x] **API:** Created `/api/ro/dnpb-error` endpoint using `get_confirmed_ro_list()` function
 - [x] **List View:** Shows confirmed ROs with discrepancy counts
   - DNPB number display (if available)
@@ -81,6 +85,37 @@
   - Loading spinner
   - "No DNPB errors found" when all ROs match
   - "No discrepancy" message when individual RO has no issues
+
+### Dual DNPB Support (2026-02-05)
+- [x] **Database Migration:** Split single DNPB column into warehouse-specific columns
+  - Renamed `dnpb_number` → `dnpb_number_ddd`
+  - Added `dnpb_number_ljbb` column
+  - Added `dnpb_match_ddd` and `dnpb_match_ljbb` boolean flags
+  - Migrations: `014_rename_dnpb_add_ljbb.sql`, `015_add_dnpb_match_columns.sql`
+- [x] **API Updates:** `/api/ro/dnpb` now accepts and validates dual DNPB numbers
+  - Separate validation for DDD and LJBB DNPB numbers
+  - Each number validated against its respective transaction table (`supabase_transaksiDDD`, `supabase_transaksiLJBB`)
+  - Format validation: `DNPB/WAREHOUSE/WHS/YEAR/ROMAN/NUMBER`
+- [x] **ROProcess Component:** Dynamic DNPB form based on warehouse allocation
+  - Shows DDD DNPB input only if RO has DDD boxes
+  - Shows LJBB DNPB input only if RO has LJBB boxes
+  - Format hint displayed below each input
+  - Separate match indicators for each warehouse
+- [x] **DNPB Error Tab:** Updated to display both DNPB numbers
+  - Color-coded display (blue for DDD, purple for LJBB)
+  - Modal shows warehouse-specific DNPB info
+  - Banding & Confirmed buttons for dispute resolution
+- [x] **CSV Export:** Updated to include both DNPB columns
+  - Columns: `DNPB_DDD` and `DNPB_LJBB`
+
+### Banding & Confirmed Actions (2026-02-05)
+- [x] **Banding Button:** Dispute discrepancy and send notice to ro-arrive-app
+  - Creates entry in `ro_banding_notices` table
+  - API endpoint: `/api/ro/banding`
+- [x] **Confirmed Button:** Accept discrepancy and complete RO
+  - Updates `ro_process` status to COMPLETED
+  - Uses `fisik` quantities as final accepted quantities
+  - API endpoint: `/api/ro/banding` (with action: 'confirm')
 
 ### WH Stock Page v2 - Real-Time Dashboard (2026-02-01)
 - [x] **Tab renamed** from "SKU" to "WH Stock"
@@ -190,12 +225,29 @@
 
 ## 📚 DOCUMENTATION
 
-- `docs/AUTH_IMPLEMENTATION_PLAN.md` - Authentication architecture
-- `docs/SUPABASE_AUTH_SETUP_GUIDE.md` - Step-by-step auth setup
-- `docs/AUDIT_REPORT_2026-01-30.md` - Security audit results
-- `docs/ARCHITECTURE.md` - System architecture
-- `docs/DATABASE_LOGIC.md` - Database relationships
-- `opencode_kimi_k25.md` - Session progress log
+> **AI Agents:** Start with [`AI_REFERENCE.md`](./AI_REFERENCE.md) for complete navigation
+
+### Core Documentation
+- [`AI_REFERENCE.md`](./AI_REFERENCE.md) - **AI Agent Hub** - Start here!
+- [`APP_LOGIC.md`](./APP_LOGIC.md) - Complete flowcharts and application logic
+- [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) - This file - Feature status and roadmap
+- [`DATABASE_LOGIC.md`](./DATABASE_LOGIC.md) - Table schemas and relationships
+- [`DNPB_MATCHING_LOGIC.md`](./DNPB_MATCHING_LOGIC.md) - DNPB validation and matching
+
+### Architecture & Planning
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) - High-level system architecture
+- [`RO_REQUEST_ARCHITECTURE.md`](./RO_REQUEST_ARCHITECTURE.md) - RO submission flow
+- [`AUTH_IMPLEMENTATION_PLAN.md`](./AUTH_IMPLEMENTATION_PLAN.md) - Authentication design
+- [`RO_WHS_READYSTOCK_VIEW.md`](./RO_WHS_READYSTOCK_VIEW.md) - Stock calculation view
+
+### Operations & Debugging
+- [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) - Common issues and fixes
+- [`AUDIT_REPORT_2026-01-30.md`](./AUDIT_REPORT_2026-01-30.md) - Security audit results
+- [`SUPABASE_AUTH_SETUP_GUIDE.md`](./SUPABASE_AUTH_SETUP_GUIDE.md) - Auth setup instructions
+
+### Progress & Session Logs
+- [`opencode_kimi_k25.md`](../opencode_kimi_k25.md) - Session-by-session progress log
+- [`README.md`](../README.md) - Project overview (user-facing)
 
 ---
 
@@ -222,5 +274,5 @@
 ---
 
 **Status:** Ready for user testing  
-**Last Deployment:** 2026-02-05 (v1.2.5 - DNPB Error Tab Implementation)  
+**Last Deployment:** 2026-02-05 (v1.2.6 - Dual DNPB Support for Multi-Warehouse ROs)  
 **Health:** ✅ All systems operational

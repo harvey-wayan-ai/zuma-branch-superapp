@@ -794,3 +794,123 @@ RO_ID,Store,Status,Created_Date,DNPB,Article_Code,Article_Name,Box,DDD,LJBB
 **Current Version:** v1.2.5
 **Total Commits:** 30+
 **Status:** Production Ready ✅
+
+---
+
+## SESSION UPDATE - 2026-02-05 (Dual DNPB Support)
+
+### ✅ COMPLETED: Support for Dual DNPB Numbers (DDD + LJBB)
+
+**Objective:** Allow ROs that order from both DDD and LJBB warehouses to have separate DNPB numbers for each warehouse.
+
+**Commit:** `d380b06`
+
+#### Problem:
+Some ROs order from **both DDD and LJBB warehouses** simultaneously. The previous system only supported a single DNPB number, which didn't work for multi-warehouse orders.
+
+#### Solution:
+
+**1. Database Changes (Migrations 014 & 015)**
+
+| Before | After |
+|--------|-------|
+| `dnpb_number` (text) | `dnpb_number_ddd` (text) |
+| `dnpb_match` (boolean) | `dnpb_number_ljbb` (text) |
+| | `dnpb_match_ddd` (boolean) |
+| | `dnpb_match_ljbb` (boolean) |
+
+**Migration Files:**
+- `migrations/014_rename_dnpb_add_ljbb.sql` - Rename column and add LJBB column
+- `migrations/015_add_dnpb_match_columns.sql` - Add separate match flags
+
+**2. API Updates (`/api/ro/dnpb`)**
+
+**Request Body:**
+```json
+{
+  "roId": "RO-2502-0001",
+  "dnpbNumberDDD": "DNPB/DDD/WHS/2025/II/1234",
+  "dnpbNumberLJBB": "DNPB/LJBB/WHS/2025/II/5678"
+}
+```
+
+**Validation Logic:**
+- DDD number → validates against `supabase_transaksiDDD` table
+- LJBB number → validates against `supabase_transaksiLJBB` table
+- Format: `DNPB/WAREHOUSE/WHS/YEAR/ROMAN/NUMBER`
+
+**3. ROProcess Component - Dynamic DNPB Form**
+
+**Before:** Always showed one DNPB input field
+
+**After:** Dynamically shows inputs based on warehouse allocation:
+- If RO has DDD boxes → show DDD DNPB input (blue border)
+- If RO has LJBB boxes → show LJBB DNPB input (purple border)
+- If both → show both inputs
+
+**Code Pattern:**
+```typescript
+// Show DDD input only if DDD boxes exist
+{hasDDDArticles && (
+  <div>
+    <label>DNPB Number (DDD)</label>
+    <input value={dnpbNumberDDD} ... />
+    <p className="text-xs text-gray-500">
+      Format: DNPB/DDD/WHS/YYYY/ROMAN/NUMBER
+    </p>
+  </div>
+)}
+
+// Show LJBB input only if LJBB boxes exist
+{hasLJBBArticles && (
+  <div>
+    <label>DNPB Number (LJBB)</label>
+    <input value={dnpbNumberLJBB} ... />
+    <p className="text-xs text-gray-500">
+      Format: DNPB/LJBB/WHS/YYYY/ROMAN/NUMBER
+    </p>
+  </div>
+)}
+```
+
+**4. DNPB Error Tab Updates**
+
+- Shows both DNPB numbers with color coding:
+  - 🔵 Blue badge: DDD DNPB number
+  - 🟣 Purple badge: LJBB DNPB number
+- Modal displays warehouse-specific DNPB info
+- Banding & Confirmed buttons work with dual DNPB
+
+**5. CSV Export Updated**
+
+**Before:** Single `DNPB` column
+**After:** Separate columns for each warehouse:
+```
+RO_ID,Store,Status,Created_Date,DNPB_DDD,DNPB_LJBB,Article_Code,...
+```
+
+#### Files Modified:
+
+**Database:**
+- `migrations/014_rename_dnpb_add_ljbb.sql`
+- `migrations/015_add_dnpb_match_columns.sql`
+
+**API:**
+- `app/api/ro/process/route.ts` - Returns both DNPB numbers
+- `app/api/ro/dnpb/route.ts` - Accepts and validates dual DNPB
+
+**Components:**
+- `components/ROProcess.tsx` - Dynamic DNPB form
+- `components/DNPBErrorContent.tsx` - Display both DNPB numbers
+
+#### Testing:
+- ✅ RO with only DDD boxes → shows only DDD input
+- ✅ RO with only LJBB boxes → shows only LJBB input
+- ✅ RO with both → shows both inputs
+- ✅ DNPB validation works per warehouse
+- ✅ CSV export includes both columns
+- ✅ DNPB Error tab displays correctly
+
+**Current Version:** v1.2.6
+**Total Commits:** 31+
+**Status:** Production Ready ✅

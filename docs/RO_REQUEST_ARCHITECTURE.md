@@ -1,4 +1,7 @@
-# RO Request Tab - Logic & Architecture Document
+# RO Request Architecture
+
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`APP_LOGIC.md`](./APP_LOGIC.md) - Application flowcharts | [`DATABASE_LOGIC.md`](./DATABASE_LOGIC.md) - Table schemas
 
 ## Overview
 The RO Request Form needs to support **dual data sources** for article selection:

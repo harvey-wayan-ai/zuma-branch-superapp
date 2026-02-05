@@ -51,9 +51,22 @@ export async function POST(request: Request) {
         )
       }
 
+      const { error: updateError } = await supabase
+        .schema("branch_super_app_clawdbot")
+        .from("ro_process")
+        .update({ 
+          status: "BANDING_SENT",
+          updated_at: new Date().toISOString()
+        })
+        .eq("ro_id", ro_id)
+
+      if (updateError) {
+        console.error("RO status update error:", updateError)
+      }
+
       return NextResponse.json({
         success: true,
-        message: "Banding notice created successfully"
+        message: "Banding notice created and RO status updated to BANDING_SENT"
       })
     } else {
       const { data: receiptData, error: receiptError } = await supabase

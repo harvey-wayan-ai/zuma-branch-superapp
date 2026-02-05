@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RO Lifecycle Flow - Zuma RO PWA</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="flow-page">
+    <div class="flow-container">
+        <header class="flow-header">
+            <a href="../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Overview
+            </a>
+            <h1>RO Lifecycle Flow</h1>
+        </header>
+
+        <div class="flow-content">
+            <div class="mermaid">
+flowchart TD
+    Start([Start]) --> QUEUE[QUEUE]
+    QUEUE --> APPROVED[APPROVED]
+    APPROVED --> PICKING[PICKING]
+    PICKING --> PICK_VERIFIED[PICK_VERIFIED]
+    PICK_VERIFIED --> DNPB_PROCESS[DNPB_PROCESS]
+    DNPB_PROCESS --> READY_TO_SHIP[READY_TO_SHIP]
+    READY_TO_SHIP --> IN_DELIVERY[IN_DELIVERY]
+    IN_DELIVERY --> ARRIVED[ARRIVED]
+    ARRIVED --> Check{Check Physical}
+    Check -->|Match| COMPLETED[COMPLETED]
+    Check -->|Discrepancy| DNPB_ERROR[DNPB_ERROR]
+    DNPB_ERROR --> Decision{Banding or Confirmed?}
+    Decision -->|Banding| BANDING_ACTION[BANDING_SENT]
+    Decision -->|Confirmed| CONFIRMED_ACTION[Mark COMPLETED]
+    BANDING_ACTION --> ARRIVED
+    CONFIRMED_ACTION --> COMPLETED
+    
+    QUEUE -.->|Cancel| CANCELLED[CANCELLED]
+    APPROVED -.->|Cancel| CANCELLED
+    PICKING -.->|Cancel| CANCELLED
+    PICK_VERIFIED -.->|Cancel| CANCELLED
+    DNPB_PROCESS -.->|Cancel| CANCELLED
+    READY_TO_SHIP -.->|Cancel| CANCELLED
+    IN_DELIVERY -.->|Cancel| CANCELLED
+    
+    style QUEUE fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
+    style APPROVED fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style PICKING fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style PICK_VERIFIED fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style DNPB_PROCESS fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style READY_TO_SHIP fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style IN_DELIVERY fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style ARRIVED fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style DNPB_ERROR fill:#fee2e2,stroke:#dc2626,stroke-width:2px
+    style COMPLETED fill:#0D3B2E,stroke:#00D084,stroke-width:2px,color:#fff
+    style CANCELLED fill:#f3f4f6,stroke:#6b7280,stroke-width:2px
+    style BANDING_ACTION fill:#ffedd5,stroke:#ea580c,stroke-width:2px
+    style CONFIRMED_ACTION fill:#0D3B2E,stroke:#00D084,stroke-width:2px,color:#fff
+    style BANDING_SENT fill:#ffedd5,stroke:#ea580c,stroke-width:2px
+            </div>
+        </div>
+
+        <div class="flow-explanation">
+            <h2>Status Descriptions</h2>
+            <table style="width:100%;border-collapse:collapse;margin-top:1rem;">
+                <tr style="background:#0D3B2E;color:white;">
+                    <th style="padding:12px;text-align:left;">Status</th>
+                    <th style="padding:12px;text-align:left;">Description</th>
+                    <th style="padding:12px;text-align:left;">Who Updates</th>
+                </tr>
+                <tr style="background:#e0f2fe;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>QUEUE</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">RO just created, waiting for approval</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">System (auto)</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>APPROVED</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">RO approved by supervisor</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH SPV</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>PICKING</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Warehouse staff picking items</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH Helper</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>PICK_VERIFIED</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Picking verified by supervisor</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH SPV</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>DNPB_PROCESS</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Entering DNPB numbers</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH Admin</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>READY_TO_SHIP</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Packed and ready for delivery</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH Admin</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>IN_DELIVERY</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Items in transit to store</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Logistics</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>ARRIVED</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Items arrived at store</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">SPG/B (ro-arrive-app)</td>
+                </tr>
+                <tr style="background:#fff7ed;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>BANDING_SENT</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Re-check requested, waiting for SPG/B</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">WH SPV</td>
+                </tr>
+                <tr style="background:#0D3B2E;color:white;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>COMPLETED</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">RO fully processed</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">System/WH SPV</td>
+                </tr>
+                <tr style="background:#f3f4f6;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>CANCELLED</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">RO cancelled</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">AS/WH SPV</td>
+                </tr>
+            </table>
+
+            <h2 style="margin-top:2rem;">Key Points</h2>
+            <ul>
+                <li><strong>Editable Quantities:</strong> QUEUE, APPROVED, PICKING, PICK_VERIFIED, DNPB_PROCESS</li>
+                <li><strong>Readonly Quantities:</strong> READY_TO_SHIP, IN_DELIVERY, ARRIVED, COMPLETED</li>
+                <li><strong>Cancellable:</strong> Any status except COMPLETED</li>
+                <li><strong>DNPB Input:</strong> Only at DNPB_PROCESS stage</li>
+                <li><strong>Discrepancy Resolution:</strong> Banding (dispute) or Confirmed (accept) at ARRIVED stage</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

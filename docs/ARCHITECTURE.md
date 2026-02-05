@@ -1,5 +1,8 @@
 # Branch Super App - Architecture Design
 
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`APP_LOGIC.md`](./APP_LOGIC.md) - Application flowcharts | [`DATABASE_LOGIC.md`](./DATABASE_LOGIC.md) - Data models
+
 ## 1. Overview
 A PWA tool for Branch Managers to track Sales Performance and manage Inventory (RO).
 

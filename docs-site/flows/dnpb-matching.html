@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNPB Matching Flow - Zuma RO PWA</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="flow-page">
+    <div class="flow-container">
+        <header class="flow-header">
+            <a href="../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Overview
+            </a>
+            <h1>Dual DNPB Matching Flow (v1.2.6)</h1>
+        </header>
+
+        <div class="flow-content">
+            <div class="mermaid">
+flowchart TD
+    Start([RO reaches DNPB_PROCESS]) --> CheckAlloc[Check Warehouse Allocation]
+    
+    CheckAlloc --> HasDDD{Has DDD Boxes?}
+    CheckAlloc --> HasLJBB{Has LJBB Boxes?}
+    
+    HasDDD -->|Yes| ShowDDD[Show DDD DNPB Input]
+    HasDDD -->|No| HideDDD[Hide DDD Input]
+    
+    HasLJBB -->|Yes| ShowLJBB[Show LJBB DNPB Input]
+    HasLJBB -->|No| HideLJBB[Hide LJBB Input]
+    
+    ShowDDD --> EnterDDD[User Enters DNPB Number]
+    ShowLJBB --> EnterLJBB[User Enters DNPB Number]
+    
+    EnterDDD --> FormatDDD{Format Valid?}
+    EnterLJBB --> FormatLJBB{Format Valid?}
+    
+    FormatDDD -->|No| ErrorDDD[Show Format Error]
+    FormatLJBB -->|No| ErrorLJBB[Show Format Error]
+    
+    ErrorDDD --> EnterDDD
+    ErrorLJBB --> EnterLJBB
+    
+    FormatDDD -->|Yes| ValidateDDD[Validate against supabase_transaksiDDD]
+    FormatLJBB -->|Yes| ValidateLJBB[Validate against supabase_transaksiLJBB]
+    
+    ValidateDDD --> MatchDDD{Match Found?}
+    ValidateLJBB --> MatchLJBB{Match Found?}
+    
+    MatchDDD -->|Yes| SetMatchDDD[dnpb_match_ddd = TRUE]
+    MatchDDD -->|No| SetNoMatchDDD[dnpb_match_ddd = FALSE]
+    
+    MatchLJBB -->|Yes| SetMatchLJBB[dnpb_match_ljbb = TRUE]
+    MatchLJBB -->|No| SetNoMatchLJBB[dnpb_match_ljbb = FALSE]
+    
+    SetMatchDDD --> Save[Save to ro_process]
+    SetNoMatchDDD --> Save
+    SetMatchLJBB --> Save
+    SetNoMatchLJBB --> Save
+    
+    HideDDD --> Save
+    HideLJBB --> Save
+    
+    Save --> Response[Return Response]
+    Response --> End([End])
+    
+    style Start fill:#0D3B2E,stroke:#00D084,color:#fff
+    style End fill:#0D3B2E,stroke:#00D084,color:#fff
+    style ShowDDD fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+    style ShowLJBB fill:#f3e8ff,stroke:#9333ea,stroke-width:2px
+    style ValidateDDD fill:#dbeafe,stroke:#2563eb
+    style ValidateLJBB fill:#f3e8ff,stroke:#9333ea
+    style SetMatchDDD fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style SetMatchLJBB fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Save fill:#0D3B2E,stroke:#00D084,color:#fff
+            </div>
+        </div>
+
+        <div class="flow-explanation">
+            <h2>DNPB Number Format</h2>
+            <pre style="background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;">
+DNPB/{WAREHOUSE}/WHS/{YEAR}/{ROMAN_MONTH}/{SEQUENCE}
+
+Example: DNPB/DDD/WHS/2025/II/1234
+         │      │   │    │    │    └── Sequence number
+         │      │   │    │    └────── Roman numeral month (I-XII)
+         │      │   │    └─────────── Year (4 digits)
+         │      │   └──────────────── Location (WHS = Warehouse)
+         │      └──────────────────── Warehouse entity (DDD/LJBB/MBB/UBB)
+         └─────────────────────────── Document type (DNPB)
+            </pre>
+
+            <h2 style="margin-top:2rem;">Database Schema (v1.2.6+)</h2>
+            <table style="width:100%;border-collapse:collapse;margin-top:1rem;">
+                <tr style="background:#0D3B2E;color:white;">
+                    <th style="padding:12px;text-align:left;">Column</th>
+                    <th style="padding:12px;text-align:left;">Type</th>
+                    <th style="padding:12px;text-align:left;">Description</th>
+                </tr>
+                <tr style="background:#dbeafe;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>dnpb_number_ddd</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">VARCHAR(100)</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">DNPB for DDD warehouse</td>
+                </tr>
+                <tr style="background:#f3e8ff;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>dnpb_number_ljbb</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">VARCHAR(100)</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">DNPB for LJBB warehouse</td>
+                </tr>
+                <tr style="background:#dbeafe;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>dnpb_match_ddd</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">BOOLEAN</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">TRUE if DDD DNPB matches supabase_transaksiDDD</td>
+                </tr>
+                <tr style="background:#f3e8ff;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;"><strong>dnpb_match_ljbb</strong></td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">BOOLEAN</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">TRUE if LJBB DNPB matches supabase_transaksiLJBB</td>
+                </tr>
+            </table>
+
+            <h2 style="margin-top:2rem;">Stock Impact</h2>
+            <div style="background:#fef3c7;padding:1rem;border-radius:8px;margin-top:1rem;border-left:4px solid #d97706;">
+                <strong>Without DNPB Match (Double Counting Risk):</strong><br>
+                Stock Akhir = Stock Awal + IN - OUT - RO_ongoing<br><br>
+                If same delivery is in BOTH transaksi AND ro_process:<br>
+                → Stock deducted TWICE → WRONG!
+            </div>
+            
+            <div style="background:#dcfce7;padding:1rem;border-radius:8px;margin-top:1rem;border-left:4px solid #16a34a;">
+                <strong>With DNPB Match (Correct):</strong><br>
+                When dnpb_match = TRUE:<br>
+                → RO excluded from ro_ongoing calculation<br>
+                → Stock only deducted once (in Transaksi OUT)<br>
+                → CORRECT!
+            </div>
+
+            <h2 style="margin-top:2rem;">API Endpoint</h2>
+            <pre style="background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;">
+PATCH /api/ro/dnpb
+{
+  "roId": "RO-2502-0001",
+  "dnpbNumberDDD": "DNPB/DDD/WHS/2025/II/1234",
+  "dnpbNumberLJBB": "DNPB/LJBB/WHS/2025/II/5678"
+}
+
+Response:
+{
+  "success": true,
+  "dnpbNumberDDD": "DNPB/DDD/WHS/2025/II/1234",
+  "dnpbNumberLJBB": "DNPB/LJBB/WHS/2025/II/5678",
+  "dnpbMatchDDD": true,
+  "dnpbMatchLJBB": false
+}
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

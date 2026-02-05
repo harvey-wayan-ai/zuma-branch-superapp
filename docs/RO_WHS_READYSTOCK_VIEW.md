@@ -1,4 +1,7 @@
-# RO Warehouse Ready Stock - Dynamic VIEW Mechanism
+# RO WHS Readystock VIEW Documentation
+
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`DATABASE_LOGIC.md`](./DATABASE_LOGIC.md) - Table schemas | [`APP_LOGIC.md`](./APP_LOGIC.md) - Stock calculation flow
 
 ## Overview
 

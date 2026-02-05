@@ -1,5 +1,8 @@
 # Database Logic & Table Mechanisms
 
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`APP_LOGIC.md`](./APP_LOGIC.md) - Application flowcharts | [`DNPB_MATCHING_LOGIC.md`](./DNPB_MATCHING_LOGIC.md) - DNPB validation
+
 ## Schema: `branch_super_app_clawdbot`
 
 ---

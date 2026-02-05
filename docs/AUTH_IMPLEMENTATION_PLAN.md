@@ -1,4 +1,7 @@
-# Authentication & Security Implementation Plan
+# Authentication Implementation Plan - Zuma RO PWA
+
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`APP_LOGIC.md`](./APP_LOGIC.md) - Auth flowcharts | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) - Auth status
 
 **Project:** Zuma RO PWA  
 **Date:** 2026-01-31  

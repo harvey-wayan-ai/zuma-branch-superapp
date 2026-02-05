@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create RO Flow - Zuma RO PWA</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="flow-page">
+    <div class="flow-container">
+        <header class="flow-header">
+            <a href="../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Overview
+            </a>
+            <h1>Create RO Flow</h1>
+        </header>
+
+        <div class="flow-content">
+            <div class="mermaid">
+flowchart TD
+    Start([User opens RequestForm]) --> SelectStore[Select Store]
+    SelectStore --> CheckType{Special Store?}
+    
+    CheckType -->|Yes| Special[Wholesale/Consignment/Other]
+    CheckType -->|No| Regular[Regular Store]
+    
+    Regular --> AutoBtn[AUTO Generate Button Active]
+    AutoBtn --> ClickAuto[Click AUTO]
+    ClickAuto --> API1[GET /api/ro/recommendations]
+    API1 --> Populate[Populate Table with Suggestions]
+    
+    Special --> Manual[Manual Article Selection]
+    Populate --> Manual
+    
+    Manual --> Manage{Manage Articles}
+    
+    Manage -->|Add| AddArticle[+ Add Article]
+    Manage -->|Edit| EditQty[Edit Quantities]
+    Manage -->|Clear| ClearAll[Clear All]
+    Manage -->|Submit| Validate{Validation}
+    
+    AddArticle --> Search[Search Articles]
+    Search --> API2[GET /api/articles]
+    API2 --> Select[Select Article]
+    Select --> Append[Append to List]
+    Append --> Manage
+    
+    EditQty --> DDD[Adjust DDD +/-]
+    EditQty --> LJBB[Adjust LJBB +/-]
+    DDD --> Manage
+    LJBB --> Manage
+    
+    ClearAll --> Confirm{Confirm Clear?}
+    Confirm -->|Yes| Empty[Empty Table]
+    Confirm -->|No| Manage
+    Empty --> Manage
+    
+    Validate -->|Fail| ShowErrors[Show Validation Errors]
+    ShowErrors --> Manage
+    
+    Validate -->|Pass| Submit[Submit RO]
+    Submit --> API3[POST /api/ro/submit]
+    API3 --> Generate[Generate RO ID]
+    Generate --> Insert[Insert to ro_process]
+    Insert --> Success[Show Success Toast]
+    Success --> End([End])
+    
+    style Start fill:#0D3B2E,stroke:#00D084,color:#fff
+    style End fill:#0D3B2E,stroke:#00D084,color:#fff
+    style Success fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style Submit fill:#0D3B2E,stroke:#00D084,color:#fff
+    style API1 fill:#e0f2fe,stroke:#0284c7
+    style API2 fill:#e0f2fe,stroke:#0284c7
+    style API3 fill:#e0f2fe,stroke:#0284c7
+            </div>
+        </div>
+
+        <div class="flow-explanation">
+            <h2>RO ID Generation</h2>
+            <pre style="background:#f4f4f4;padding:1rem;border-radius:8px;overflow-x:auto;">
+Format: RO-YYMM-XXXX
+
+Example: RO-2502-0001
+         │  │  └── Sequential number (0001-9999)
+         │  └───── Month (01-12)
+         └──────── Year (25 = 2025)
+
+Algorithm:
+1. Get current year (last 2 digits)
+2. Get current month (2 digits)
+3. Query: SELECT MAX(ro_id) FROM ro_process WHERE ro_id LIKE 'RO-YYMM-%'
+4. If found: increment sequence
+5. If not found: start at 0001
+            </pre>
+
+            <h2 style="margin-top:2rem;">Data Sources</h2>
+            <ul>
+                <li><strong>Store List:</strong> From ro_recommendations table</li>
+                <li><strong>Recommendations:</strong> Auto-generated based on store tier and sales velocity</li>
+                <li><strong>Article Catalog:</strong> From ro_stockwhs table with real-time stock</li>
+            </ul>
+
+            <h2 style="margin-top:2rem;">API Endpoints Used</h2>
+            <table style="width:100%;border-collapse:collapse;margin-top:1rem;">
+                <tr style="background:#0D3B2E;color:white;">
+                    <th style="padding:12px;text-align:left;">Endpoint</th>
+                    <th style="padding:12px;text-align:left;">Method</th>
+                    <th style="padding:12px;text-align:left;">Purpose</th>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">/api/ro/recommendations</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">GET</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Get store-specific recommendations</td>
+                </tr>
+                <tr style="background:#f9fafb;">
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">/api/articles</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">GET</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Search article catalog</td>
+                </tr>
+                <tr>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">/api/ro/submit</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">POST</td>
+                    <td style="padding:12px;border-bottom:1px solid #ddd;">Submit new RO</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

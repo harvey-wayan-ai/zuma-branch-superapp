@@ -1,5 +1,8 @@
 # Supabase Auth Setup Guide - Zuma RO PWA
 
+> **AI Agent Reference:** For complete app navigation, see [`AI_REFERENCE.md`](./AI_REFERENCE.md)  
+> **Related:** [`AUTH_IMPLEMENTATION_PLAN.md`](./AUTH_IMPLEMENTATION_PLAN.md) - Auth design | [`APP_LOGIC.md`](./APP_LOGIC.md) - Auth flowcharts
+
 **Project:** Zuma Branch Super App  
 **Date:** 2026-01-31  
 **Purpose:** Configure Supabase Dashboard for Authentication  
