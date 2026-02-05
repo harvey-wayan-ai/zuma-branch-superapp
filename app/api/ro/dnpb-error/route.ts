@@ -24,6 +24,7 @@ export async function GET() {
     }
 
     const { data: roList, error } = await supabase
+      .schema('public')
       .rpc("get_confirmed_ro_list")
 
     if (error) {
