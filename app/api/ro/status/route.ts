@@ -4,13 +4,14 @@ import { supabase } from '@/lib/supabase';
 
 const VALID_STATUSES = [
   'QUEUE',
-  'APPROVED', 
+  'APPROVED',
   'PICKING',
   'PICK_VERIFIED',
   'DNPB_PROCESS',
   'READY_TO_SHIP',
   'IN_DELIVERY',
   'ARRIVED',
+  'BANDING_SENT',
   'COMPLETED',
   'CANCELLED'
 ];
@@ -24,6 +25,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   'READY_TO_SHIP': ['IN_DELIVERY', 'CANCELLED'],
   'IN_DELIVERY': ['ARRIVED', 'CANCELLED'],
   'ARRIVED': ['COMPLETED', 'CANCELLED'],
+  'BANDING_SENT': ['ARRIVED', 'COMPLETED', 'CANCELLED'],
   'COMPLETED': [],
   'CANCELLED': [],
 };
