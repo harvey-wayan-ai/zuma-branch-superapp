@@ -1,7 +1,7 @@
 # Project Status - Zuma RO PWA
 
-**Last Updated:** 2026-02-04  
-**Current Version:** v1.2.4  
+**Last Updated:** 2026-02-05  
+**Current Version:** v1.2.5  
 **Live URL:** https://zuma-ro-pwa.vercel.app
 
 ---
@@ -57,6 +57,30 @@
   - Readonly: READY_TO_SHIP, IN_DELIVERY, ARRIVED, COMPLETED
 - [x] **ROProcess:** Save Changes button hidden when RO is not editable
 - [x] CSV format: RO_ID, Store, Status, Created_Date, DNPB, Article_Code, Article_Name, Box, DDD, LJBB
+
+### DNPB Error Tab (2026-02-05)
+- [x] **New Tab:** Added "DNPB Error" tab to RO Page (4th tab)
+- [x] **Copied from ro-arrive-app:** Full implementation mirrored from ro-arrive-app DNPB Error page
+- [x] **API:** Created `/api/ro/dnpb-error` endpoint using `get_confirmed_ro_list()` function
+- [x] **List View:** Shows confirmed ROs with discrepancy counts
+  - DNPB number display (if available)
+  - Store name
+  - Item count badge
+  - Discrepancy indicator (orange warning or green check)
+- [x] **Detail Modal:** Full article breakdown when clicking an RO
+  - Article code and name
+  - SKU code
+  - Pairs per box (Asst)
+  - Shipped quantity
+  - Physical received quantity
+  - Discrepancy (selisih) with color-coded badges
+  - Notes
+- [x] **Database:** Created `get_confirmed_ro_list()` function in public schema
+- [x] **Styling:** Zuma brand colors (#0D3B2E header, proper badge colors)
+- [x] **Empty States:** 
+  - Loading spinner
+  - "No DNPB errors found" when all ROs match
+  - "No discrepancy" message when individual RO has no issues
 
 ### WH Stock Page v2 - Real-Time Dashboard (2026-02-01)
 - [x] **Tab renamed** from "SKU" to "WH Stock"
@@ -198,5 +222,5 @@
 ---
 
 **Status:** Ready for user testing  
-**Last Deployment:** 2026-02-04 (v1.2.4 - RO Process CSV Download & Readonly Quantities)  
+**Last Deployment:** 2026-02-05 (v1.2.5 - DNPB Error Tab Implementation)  
 **Health:** ✅ All systems operational

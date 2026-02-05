@@ -713,7 +713,84 @@ RO_ID,Store,Status,Created_Date,DNPB,Article_Code,Article_Name,Box,DDD,LJBB
 | 2026-02-02 | `16e3684` | P0 security fixes |
 | 2026-02-04 | `9ddc254` | RO Process CSV download |
 | 2026-02-04 | `946c98e` | Readonly quantities after READY_TO_SHIP |
+| 2026-02-04 | `f6febe7` | Add DNPB Error tab placeholder |
+| 2026-02-05 | `79faed2` | DNPB Error full implementation |
+| 2026-02-05 | `f06c143` | Fix get_confirmed_ro_list function |
+| 2026-02-05 | `b9b93bb` | Export DNPBErrorRO type fix |
+| 2026-02-05 | `649d12b` | Move modal to correct location |
+| 2026-02-05 | `7929b3f` | Fix public schema for RPC function |
 
-**Current Version:** v1.2.4
-**Total Commits:** 25+
+---
+
+## SESSION UPDATE - 2026-02-05 (DNPB Error Tab Implementation)
+
+### ✅ COMPLETED: DNPB Error Tab - Full Implementation
+
+**Objective:** Copy DNPB Error page from ro-arrive-app to zuma-ro-pwa RO Page
+
+**Commits:** `f6febe7` → `7929b3f`
+
+#### Files Created:
+- `app/api/ro/dnpb-error/route.ts` - API endpoint
+- `components/DNPBErrorContent.tsx` - List view + Detail modal
+- `migrations/011_create_dnpb_error_function.sql` - Initial function
+- `migrations/012_fix_get_confirmed_ro_list.sql` - Fixed function
+
+#### Implementation Details:
+
+**1. API Endpoint (`/api/ro/dnpb-error`)**
+- Uses `get_confirmed_ro_list()` PostgreSQL function
+- Returns confirmed ROs with discrepancy data
+- Fetches article details from `ro_receipt` table
+- Auth protected (401 if not logged in)
+
+**2. DNPBErrorContent Component**
+- **List View:**
+  - Shows DNPB number (if available) or RO ID
+  - Store name
+  - Item count badge
+  - Discrepancy indicator:
+    - 🟠 Orange: "Discrepancy: X pairs" 
+    - 🟢 Green: "Match (no discrepancy)"
+  - Refresh button
+  - Empty state: "No DNPB errors found"
+
+- **Detail Modal (DNPBErrorDetailModal):**
+  - Dark green header (#0D3B2E) with RO ID and store
+  - DNPB number display
+  - Warning banner for discrepancies
+  - Table columns:
+    - Article (code + name)
+    - Asst (pairs per box)
+    - SKU Code
+    - Shipped (pairs_shipped)
+    - Physical (fisik)
+    - Diff (selisih) - color coded
+    - Notes
+  - Close button
+
+**3. Database Changes**
+- Added `is_confirmed` column to `ro_receipt` table
+- Created `get_confirmed_ro_list()` function in public schema
+- Function aggregates ROs with total items and total discrepancy
+
+**4. ROPage Integration**
+- Added 4th tab: "DNPB Error"
+- Imports DNPBErrorContent and DNPBErrorDetailModal
+- Manages selected RO state
+- Passes onSelectRO callback
+
+#### Issues Fixed:
+1. **Build Error:** `DNPBErrorRO` type not exported → Fixed by exporting interface
+2. **Runtime Error:** Modal in wrong component → Moved to ROPage
+3. **Schema Error:** Function in public schema, client using branch_super_app_clawdbot → Added `.schema('public')`
+
+#### Testing:
+- 22 received ROs in database
+- 2 ROs with discrepancies showing correctly
+- Detail modal displays article breakdown
+- Empty state works when no discrepancies
+
+**Current Version:** v1.2.5
+**Total Commits:** 30+
 **Status:** Production Ready ✅
